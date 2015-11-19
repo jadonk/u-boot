@@ -39,6 +39,7 @@ DECLARE_GLOBAL_DATA_PTR;
 struct gpio_bank {
 	/* TODO(sjg@chromium.org): Can we use a struct here? */
 	void *base;	/* address of registers in physical memory */
+	enum gpio_method method;
 };
 
 #endif
@@ -59,8 +60,13 @@ static void _set_gpio_direction(const struct gpio_bank *bank, int gpio,
 	void *reg = bank->base;
 	u32 l;
 
-	reg += OMAP_GPIO_OE;
-
+	switch (bank->method) {
+	case METHOD_GPIO_24XX:
+		reg += OMAP_GPIO_OE;
+		break;
+	default:
+		return;
+	}
 	l = __raw_readl(reg);
 	if (is_input)
 		l |= 1 << gpio;
@@ -78,7 +84,13 @@ static int _get_gpio_direction(const struct gpio_bank *bank, int gpio)
 	void *reg = bank->base;
 	u32 v;
 
-	reg += OMAP_GPIO_OE;
+	switch (bank->method) {
+	case METHOD_GPIO_24XX:
+		reg += OMAP_GPIO_OE;
+		break;
+	default:
+		return -1;
+	}
 
 	v = __raw_readl(reg);
 
@@ -94,12 +106,19 @@ static void _set_gpio_dataout(const struct gpio_bank *bank, int gpio,
 	void *reg = bank->base;
 	u32 l = 0;
 
-	if (enable)
-		reg += OMAP_GPIO_SETDATAOUT;
-	else
-		reg += OMAP_GPIO_CLEARDATAOUT;
-
-	l = 1 << gpio;
+	switch (bank->method) {
+	case METHOD_GPIO_24XX:
+		if (enable)
+			reg += OMAP_GPIO_SETDATAOUT;
+		else
+			reg += OMAP_GPIO_CLEARDATAOUT;
+		l = 1 << gpio;
+		break;
+	default:
+		printf("omap3-gpio unknown bank method %s %d\n",
+		       __FILE__, __LINE__);
+		return;
+	}
 	__raw_writel(l, reg);
 }
 
@@ -108,13 +127,19 @@ static int _get_gpio_value(const struct gpio_bank *bank, int gpio)
 	void *reg = bank->base;
 	int input;
 
-	input = _get_gpio_direction(bank, gpio);
-	switch (input) {
-	case OMAP_GPIO_DIR_IN:
-		reg += OMAP_GPIO_DATAIN;
-		break;
-	case OMAP_GPIO_DIR_OUT:
-		reg += OMAP_GPIO_DATAOUT;
+	switch (bank->method) {
+	case METHOD_GPIO_24XX:
+		input = _get_gpio_direction(bank, gpio);
+		switch (input) {
+		case OMAP_GPIO_DIR_IN:
+			reg += OMAP_GPIO_DATAIN;
+			break;
+		case OMAP_GPIO_DIR_OUT:
+			reg += OMAP_GPIO_DATAOUT;
+			break;
+		default:
+			return -1;
+		}
 		break;
 	default:
 		return -1;
@@ -300,56 +325,24 @@ static int omap_gpio_probe(struct udevice *dev)
 	struct gpio_bank *bank = dev_get_priv(dev);
 	struct omap_gpio_platdata *plat = dev_get_platdata(dev);
 	struct gpio_dev_priv *uc_priv = dev_get_uclass_priv(dev);
+	char name[18], *str;
 
-	uc_priv->bank_name = plat->port_name;
+	sprintf(name, "GPIO%d_", plat->bank_index);
+	str = strdup(name);
+	if (!str)
+		return -ENOMEM;
+	uc_priv->bank_name = str;
 	uc_priv->gpio_count = GPIO_PER_BANK;
 	bank->base = (void *)plat->base;
+	bank->method = plat->method;
 
 	return 0;
 }
-
-static int omap_gpio_bind(struct udevice *dev)
-{
-	struct omap_gpio_platdata *plat = dev->platdata;
-	fdt_addr_t base_addr;
-
-	if (plat)
-		return 0;
-
-	base_addr = dev_get_addr(dev);
-	if (base_addr == FDT_ADDR_T_NONE)
-		return -ENODEV;
-
-	/*
-	* TODO:
-	* When every board is converted to driver model and DT is
-	* supported, this can be done by auto-alloc feature, but
-	* not using calloc to alloc memory for platdata.
-	*/
-	plat = calloc(1, sizeof(*plat));
-	if (!plat)
-		return -ENOMEM;
-
-	plat->base = base_addr;
-	plat->port_name = fdt_get_name(gd->fdt_blob, dev->of_offset, NULL);
-	dev->platdata = plat;
-
-	return 0;
-}
-
-static const struct udevice_id omap_gpio_ids[] = {
-	{ .compatible = "ti,omap3-gpio" },
-	{ .compatible = "ti,omap4-gpio" },
-	{ .compatible = "ti,am4372-gpio" },
-	{ }
-};
 
 U_BOOT_DRIVER(gpio_omap) = {
 	.name	= "gpio_omap",
 	.id	= UCLASS_GPIO,
 	.ops	= &gpio_omap_ops,
-	.of_match = omap_gpio_ids,
-	.bind	= omap_gpio_bind,
 	.probe	= omap_gpio_probe,
 	.priv_auto_alloc_size = sizeof(struct gpio_bank),
 };

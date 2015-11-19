@@ -60,11 +60,254 @@
 #define DEFAULT_MMC_TI_ARGS \
 	"mmcdev=0\0" \
 	"mmcrootfstype=ext4 rootwait\0" \
-	"finduuid=part uuid mmc 0:2 uuid\0" \
+	"finduuid=part uuid ${interface} ${bootpart} uuid\0" \
 	"args_mmc=run finduuid;setenv bootargs console=${console} " \
 		"${optargs} " \
-		"root=PARTUUID=${uuid} rw " \
-		"rootfstype=${mmcrootfstype}\0"
+		"${cape_disable} " \
+		"${cape_enable} " \
+		"root=PARTUUID=${uuid} ro " \
+		"rootfstype=${mmcrootfstype} " \
+		"${cmdline}\0" \
+	"args_mmc_old=setenv bootargs console=${console} " \
+		"${optargs} " \
+		"${cape_disable} " \
+		"${cape_enable} " \
+		"root=${oldroot} ro " \
+		"rootfstype=${mmcrootfstype} " \
+		"${cmdline}\0" \
+	"args_mmc_uuid=setenv bootargs console=${console} " \
+		"${optargs} " \
+		"${cape_disable} " \
+		"${cape_enable} " \
+		"root=UUID=${uuid} ro " \
+		"rootfstype=${mmcrootfstype} " \
+		"${cmdline}\0" \
+	"args_uenv_root=setenv bootargs console=${console} " \
+		"${optargs} " \
+		"${cape_disable} " \
+		"${cape_enable} " \
+		"root=${uenv_root} ro " \
+		"rootfstype=${mmcrootfstype} " \
+		"${cmdline}\0" \
+	"args_netinstall=setenv bootargs ${netinstall_bootargs} " \
+		"${optargs} " \
+		"${cape_disable} " \
+		"${cape_enable} " \
+		"root=/dev/ram rw " \
+		"${cmdline}\0"
+
+#define EEWIKI_NFS \
+	"server_ip=192.168.1.100\0" \
+	"gw_ip=192.168.1.1\0" \
+	"netmask=255.255.255.0\0" \
+	"hostname=\0" \
+	"device=eth0\0" \
+	"autoconf=off\0" \
+	"root_dir=/home/userid/targetNFS\0" \
+	"tftp_dir=\0" \
+	"nfs_options=,vers=3\0" \
+	"nfsrootfstype=ext4 rootwait fixrtc\0" \
+	"nfsargs=setenv bootargs console=${console} " \
+		"${optargs} " \
+		"${cape_disable} " \
+		"${cape_enable} " \
+		"root=/dev/nfs rw " \
+		"rootfstype=${nfsrootfstype} " \
+		"nfsroot=${nfsroot} " \
+		"ip=${ip} " \
+		"${cmdline}\0" \
+	"nfsboot=echo Booting from ${server_ip} ...; " \
+		"setenv nfsroot ${server_ip}:${root_dir}${nfs_options}; " \
+		"setenv ip ${client_ip}:${server_ip}:${gw_ip}:${netmask}:${hostname}:${device}:${autoconf}; " \
+		"setenv autoload no; " \
+		"setenv serverip ${server_ip}; " \
+		"setenv ipaddr ${client_ip}; " \
+		"tftp ${loadaddr} ${tftp_dir}${bootfile}; " \
+		"tftp ${fdtaddr} ${tftp_dir}dtbs/${fdtfile}; " \
+		"run nfsargs; " \
+		"bootz ${loadaddr} - ${fdtaddr}\0" \
+	"nfsboot_uname_r=echo Booting from ${server_ip} ...; " \
+		"setenv nfsroot ${server_ip}:${root_dir}${nfs_options}; " \
+		"setenv ip ${client_ip}:${server_ip}:${gw_ip}:${netmask}:${hostname}:${device}:${autoconf}; " \
+		"setenv autoload no; " \
+		"setenv serverip ${server_ip}; " \
+		"setenv ipaddr ${client_ip}; " \
+		"tftp ${loadaddr} ${tftp_dir}vmlinuz-${uname_r}; " \
+		"tftp ${fdtaddr} ${tftp_dir}dtbs/${uname_r}/${fdtfile}; " \
+		"run nfsargs; " \
+		"bootz ${loadaddr} - ${fdtaddr}\0" \
+
+#define EEWIKI_BOOT \
+	"boot=${interface} dev ${mmcdev}; " \
+		"if ${interface} rescan; then " \
+			"gpio set 54;" \
+			"setenv bootpart ${mmcdev}:1; " \
+			"if test -e ${interface} ${bootpart} /etc/fstab; then " \
+				"setenv mmcpart 1;" \
+			"fi; " \
+			"echo Checking for: /uEnv.txt ...;" \
+			"if test -e ${interface} ${bootpart} /uEnv.txt; then " \
+				"if run loadbootenv; then " \
+					"gpio set 55;" \
+					"echo Loaded environment from ${bootenv};" \
+					"run importbootenv;" \
+				"fi;" \
+				"if test -n ${cape}; then " \
+					"if test -e ${interface} ${bootpart} ${fdtdir}/${fdtbase}-${cape}.dtb; then " \
+						"setenv fdtfile ${fdtbase}-${cape}.dtb; " \
+					"fi; " \
+					"echo using: $fdtfile...; " \
+				"fi; " \
+				"echo Checking if uenvcmd is set ...;" \
+				"if test -n ${uenvcmd}; then " \
+					"gpio set 56; " \
+					"echo Running uenvcmd ...;" \
+					"run uenvcmd;" \
+				"fi;" \
+				"echo Checking if client_ip is set ...;" \
+				"if test -n ${client_ip}; then " \
+					"if test -n ${dtb}; then " \
+						"setenv fdtfile ${dtb};" \
+						"echo using ${fdtfile} ...;" \
+					"fi;" \
+					"gpio set 56; " \
+					"if test -n ${uname_r}; then " \
+						"echo Running nfsboot_uname_r ...;" \
+						"run nfsboot_uname_r;" \
+					"fi;" \
+					"echo Running nfsboot ...;" \
+					"run nfsboot;" \
+				"fi;" \
+			"fi; " \
+			"echo Checking for: /${script} ...;" \
+			"if test -e ${interface} ${bootpart} /${script}; then " \
+				"gpio set 55;" \
+				"setenv scriptfile ${script};" \
+				"run loadbootscript;" \
+				"echo Loaded script from ${scriptfile};" \
+				"gpio set 56; " \
+				"run bootscript;" \
+			"fi; " \
+			"echo Checking for: /boot/${script} ...;" \
+			"if test -e ${interface} ${bootpart} /boot/${script}; then " \
+				"gpio set 55;" \
+				"setenv scriptfile /boot/${script};" \
+				"run loadbootscript;" \
+				"echo Loaded script from ${scriptfile};" \
+				"gpio set 56; " \
+				"run bootscript;" \
+			"fi; " \
+			"echo Checking for: /boot/uEnv.txt ...;" \
+			"for i in 1 2 3 4 5 6 7 ; do " \
+				"setenv mmcpart ${i};" \
+				"setenv bootpart ${mmcdev}:${mmcpart};" \
+				"if test -e ${interface} ${bootpart} /boot/uEnv.txt; then " \
+					"gpio set 55;" \
+					"load ${interface} ${bootpart} ${loadaddr} /boot/uEnv.txt;" \
+					"env import -t ${loadaddr} ${filesize};" \
+					"echo Loaded environment from /boot/uEnv.txt;" \
+					"if test -n ${dtb}; then " \
+						"setenv fdtfile ${dtb};" \
+						"echo Using: dtb=${fdtfile} ...;" \
+					"fi;" \
+					"echo Checking if uname_r is set in /boot/uEnv.txt...;" \
+					"if test -n ${uname_r}; then " \
+						"gpio set 56; " \
+						"setenv oldroot /dev/mmcblk${mmcdev}p${mmcpart};" \
+						"echo Running uname_boot ...;" \
+						"run uname_boot;" \
+					"fi;" \
+				"fi;" \
+			"done;" \
+		"fi;\0" \
+
+#define EEWIKI_UNAME_BOOT \
+	"uname_boot="\
+		"setenv bootdir /boot; " \
+		"setenv bootfile vmlinuz-${uname_r}; " \
+		"if test -e ${interface} ${bootpart} ${bootdir}/${bootfile}; then " \
+			"echo loading ${bootdir}/${bootfile} ...; "\
+			"run loadimage;" \
+			"setenv fdtdir /boot/dtbs/${uname_r}; " \
+			"if test -e ${interface} ${bootpart} ${fdtdir}/${fdtfile}; then " \
+				"run loadfdt;" \
+			"else " \
+				"setenv fdtdir /usr/lib/linux-image-${uname_r}; " \
+				"if test -e ${interface} ${bootpart} ${fdtdir}/${fdtfile}; then " \
+					"run loadfdt;" \
+				"else " \
+					"setenv fdtdir /lib/firmware/${uname_r}/device-tree; " \
+					"if test -e ${interface} ${bootpart} ${fdtdir}/${fdtfile}; then " \
+						"run loadfdt;" \
+					"else " \
+						"setenv fdtdir /boot/dtb-${uname_r}; " \
+						"if test -e ${interface} ${bootpart} ${fdtdir}/${fdtfile}; then " \
+							"run loadfdt;" \
+						"else " \
+							"setenv fdtdir /boot/dtbs; " \
+							"if test -e ${interface} ${bootpart} ${fdtdir}/${fdtfile}; then " \
+								"run loadfdt;" \
+							"else " \
+								"setenv fdtdir /boot/dtb; " \
+								"if test -e ${interface} ${bootpart} ${fdtdir}/${fdtfile}; then " \
+									"run loadfdt;" \
+								"else " \
+									"setenv fdtdir /boot; " \
+									"if test -e ${interface} ${bootpart} ${fdtdir}/${fdtfile}; then " \
+										"run loadfdt;" \
+									"else " \
+										"if test -e ${interface} ${bootpart} ${fdtfile}; then " \
+											"run loadfdt;" \
+										"else " \
+											"echo; echo unable to find [dtb=${fdtfile}] did you name it correctly? ...; " \
+											"run failumsboot;" \
+										"fi;" \
+									"fi;" \
+								"fi;" \
+							"fi;" \
+						"fi;" \
+					"fi;" \
+				"fi;" \
+			"fi; " \
+			"setenv rdfile initrd.img-${uname_r}; " \
+			"if test -e ${interface} ${bootpart} ${bootdir}/${rdfile}; then " \
+				"echo loading ${bootdir}/${rdfile} ...; "\
+				"run loadrd;" \
+				"if test -n ${netinstall_enable}; then " \
+					"run args_netinstall; run message;" \
+					"echo debug: [${bootargs}] ... ;" \
+					"echo debug: [bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}] ... ;" \
+					"bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}; " \
+				"fi;" \
+				"if test -n ${uenv_root}; then " \
+					"run args_uenv_root;" \
+					"echo debug: [${bootargs}] ... ;" \
+					"echo debug: [bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}] ... ;" \
+					"bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}; " \
+				"fi;" \
+				"if test -n ${uuid}; then " \
+					"run args_mmc_uuid;" \
+					"echo debug: [${bootargs}] ... ;" \
+					"echo debug: [bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}] ... ;" \
+					"bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}; " \
+				"fi;" \
+				"run args_mmc_old;" \
+				"echo debug: [${bootargs}] ... ;" \
+				"echo debug: [bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}] ... ;" \
+				"bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}; " \
+			"else " \
+				"if test -n ${uenv_root}; then " \
+					"run args_uenv_root;" \
+					"echo debug: [${bootargs}] ... ;" \
+					"echo debug: [bootz ${loadaddr} - ${fdtaddr}] ... ;" \
+					"bootz ${loadaddr} - ${fdtaddr}; " \
+				"fi;" \
+				"run args_mmc_old;" \
+				"echo debug: [${bootargs}] ... ;" \
+				"echo debug: [bootz ${loadaddr} - ${fdtaddr}] ... ;" \
+				"bootz ${loadaddr} - ${fdtaddr}; " \
+			"fi;" \
+		"fi;\0" \
 
 /*
  * DDR information.  If the CONFIG_NR_DRAM_BANKS is not defined,

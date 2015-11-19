@@ -66,16 +66,38 @@ U_BOOT_DEVICES(am33xx_uarts) = {
 };
 #endif
 
-
-#ifndef CONFIG_DM_GPIO
-static const struct gpio_bank gpio_bank_am33xx[] = {
-	{ (void *)AM33XX_GPIO0_BASE },
-	{ (void *)AM33XX_GPIO1_BASE },
-	{ (void *)AM33XX_GPIO2_BASE },
-	{ (void *)AM33XX_GPIO3_BASE },
+#ifdef CONFIG_DM_GPIO
+static const struct omap_gpio_platdata am33xx_gpio[] = {
+	{ 0, AM33XX_GPIO0_BASE, METHOD_GPIO_24XX },
+	{ 1, AM33XX_GPIO1_BASE, METHOD_GPIO_24XX },
+	{ 2, AM33XX_GPIO2_BASE, METHOD_GPIO_24XX },
+	{ 3, AM33XX_GPIO3_BASE, METHOD_GPIO_24XX },
 #ifdef CONFIG_AM43XX
-	{ (void *)AM33XX_GPIO4_BASE },
-	{ (void *)AM33XX_GPIO5_BASE },
+	{ 4, AM33XX_GPIO4_BASE, METHOD_GPIO_24XX },
+	{ 5, AM33XX_GPIO5_BASE, METHOD_GPIO_24XX },
+#endif
+};
+
+U_BOOT_DEVICES(am33xx_gpios) = {
+	{ "gpio_omap", &am33xx_gpio[0] },
+	{ "gpio_omap", &am33xx_gpio[1] },
+	{ "gpio_omap", &am33xx_gpio[2] },
+	{ "gpio_omap", &am33xx_gpio[3] },
+#ifdef CONFIG_AM43XX
+	{ "gpio_omap", &am33xx_gpio[4] },
+	{ "gpio_omap", &am33xx_gpio[5] },
+#endif
+};
+
+#else
+static const struct gpio_bank gpio_bank_am33xx[] = {
+	{ (void *)AM33XX_GPIO0_BASE, METHOD_GPIO_24XX },
+	{ (void *)AM33XX_GPIO1_BASE, METHOD_GPIO_24XX },
+	{ (void *)AM33XX_GPIO2_BASE, METHOD_GPIO_24XX },
+	{ (void *)AM33XX_GPIO3_BASE, METHOD_GPIO_24XX },
+#ifdef CONFIG_AM43XX
+	{ (void *)AM33XX_GPIO4_BASE, METHOD_GPIO_24XX },
+	{ (void *)AM33XX_GPIO5_BASE, METHOD_GPIO_24XX },
 #endif
 };
 
