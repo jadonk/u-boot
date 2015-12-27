@@ -97,7 +97,8 @@
 	func(DHCP, dhcp, na)
 
 #define CONFIG_BOOTCOMMAND \
-	"run findfdt; " \
+	"setenv fdtfile am335x-boneblack.dtb; " \
+	"setenv fdtbase am335x-boneblack; " \
 	"run distro_bootcmd"
 
 #include <config_distro_bootcmd.h>
