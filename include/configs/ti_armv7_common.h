@@ -59,12 +59,16 @@
 
 #define DEFAULT_MMC_TI_ARGS \
 	"mmcdev=0\0" \
-	"mmcrootfstype=ext4 rootwait\0" \
+	"mmcpart=1\0" \
+	"mmcrootfstype=ext4 rootwait fixrtc\0" \
 	"finduuid=part uuid mmc 0:2 uuid\0" \
 	"args_mmc=run finduuid;setenv bootargs console=${console} " \
 		"${optargs} " \
+		"${cape_disable} " \
+		"${cape_enable} " \
 		"root=PARTUUID=${uuid} rw " \
-		"rootfstype=${mmcrootfstype}\0"
+		"rootfstype=${mmcrootfstype}" \
+		"${cmdline}\0"
 
 /*
  * DDR information.  If the CONFIG_NR_DRAM_BANKS is not defined,
