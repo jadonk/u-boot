@@ -354,10 +354,6 @@
 #define CONFIG_G_DNL_VENDOR_NUM 0x0451
 #define CONFIG_G_DNL_PRODUCT_NUM 0xD022
 #define CONFIG_G_DNL_MANUFACTURER "Texas Instruments"
-
-#define CONFIG_CMD_USB_MASS_STORAGE
-#define CONFIG_USB_FUNCTION_MASS_STORAGE
-
 #endif /* CONFIG_USB_MUSB_GADGET */
 
 /*
@@ -519,11 +515,5 @@
 					"4m(kernel),-(rootfs)"
 #endif
 #endif  /* NOR support */
-
-#if defined(CONFIG_CMD_MEMTEST)
-#define CONFIG_SYS_MEMTEST_START	0x80000000
-#define CONFIG_SYS_MEMTEST_END		0x9fffffff
-#endif
-
 
 #endif	/* ! __CONFIG_AM335X_EVM_H */
