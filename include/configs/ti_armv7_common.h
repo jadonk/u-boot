@@ -67,10 +67,17 @@
 	"loadbootscript=load mmc ${mmcdev} ${loadaddr} boot.scr\0" \
 	"bootscript=echo Running bootscript from mmc${mmcdev} ...; " \
 		"source ${loadaddr}\0" \
-	"bootenvfile=uEnv.txt\0" \
+	"bootenvfile=/boot/uEnv.txt\0" \
 	"importbootenv=echo Importing environment from mmc${mmcdev} ...; " \
-		"env import -t ${loadaddr} ${filesize}\0" \
-	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenvfile}\0" \
+		"env import -t ${loadaddr} ${filesize}; " \
+		"if test -n ${uname_r}; then " \
+			"setenv bootfile vmlinuz-${uname_r}; "\
+			"setenv fdtdir /boot/dtbs/${uname_r}; "\
+		"fi;" \
+		"if test -n ${dtb}; then " \
+			"setenv fdtfile ${dtb}; " \
+		"fi;\0" \
+	"loadbootenv=ext2load mmc ${mmcdev} ${loadaddr} ${bootenvfile};\0" \
 	"envboot=mmc dev ${mmcdev}; " \
 		"if mmc rescan; then " \
 			"echo SD/MMC found on device ${mmcdev};" \

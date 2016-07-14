@@ -67,7 +67,7 @@
 #define BOOTENV_DEV_LEGACY_MMC(devtypeu, devtypel, instance) \
 	"bootcmd_" #devtypel #instance "=" \
 	"setenv mmcdev " #instance"; "\
-	"setenv bootpart " #instance":2 ; "\
+	"setenv bootpart " #instance":1 ; "\
 	"run mmcboot\0"
 
 #define BOOTENV_DEV_NAME_LEGACY_MMC(devtypeu, devtypel, instance) \
@@ -104,6 +104,7 @@
 	"boot_fdt=try\0" \
 	"bootpart=0:2\0" \
 	"bootdir=/boot\0" \
+	"fdtdir=/boot\0" \
 	"bootfile=zImage\0" \
 	"fdtfile=undefined\0" \
 	"console=ttyO0,115200n8\0" \
@@ -128,7 +129,7 @@
 		"rootfstype=${ramrootfstype}\0" \
 	"loadramdisk=load mmc ${mmcdev} ${rdaddr} ramdisk.gz\0" \
 	"loadimage=load mmc ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
-	"loadfdt=load mmc ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadfdt=load mmc ${bootpart} ${fdtaddr} ${fdtdir}/${fdtfile}\0" \
 	"mmcloados=run args_mmc; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
