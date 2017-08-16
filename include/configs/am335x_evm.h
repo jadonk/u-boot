@@ -151,7 +151,7 @@
 	"preboot=run if_netconsole start_netconsole\0"\
 	"findfdt="\
 		"if test $board_name = A335PBGL; then " \
-			"setenv fdtfile am335x-bone.dtb; fi; " \
+			"setenv fdtfile am335x-pocketbeagle.dtb; fi; " \
 		"if test $board_name = A335BONE; then " \
 			"setenv fdtfile am335x-bone.dtb; fi; " \
 		"if test $board_name = A335BNLT; then " \
