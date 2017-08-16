@@ -324,7 +324,7 @@ static void scale_vcores_bone(int freq)
 	 * Only perform PMIC configurations if board rev > A1
 	 * on Beaglebone White
 	 */
-	if (board_is_bone() && !strncmp(board_ti_get_rev(), "00A1", 4))
+	if (!board_is_pb() && board_is_bone() && !strncmp(board_ti_get_rev(), "00A1", 4))
 		return;
 
 	if (i2c_probe(TPS65217_CHIP_PM))
