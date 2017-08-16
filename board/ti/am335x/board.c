@@ -274,7 +274,7 @@ const struct dpll_params *get_dpll_ddr_params(void)
 
 static u8 bone_not_connected_to_ac_power(void)
 {
-	if (board_is_bone()) {
+	if (board_is_bone() && !board_is_pb()) {
 		uchar pmic_status_reg;
 		if (tps65217_reg_read(TPS65217_STATUS,
 				      &pmic_status_reg))
@@ -387,9 +387,10 @@ static void scale_vcores_bone(int freq)
 
 	/*
 	 * Set LDO3, LDO4 output voltage to 3.3V for Beaglebone.
-	 * Set LDO3 to 1.8V and LDO4 to 3.3V for Beaglebone Black.
+	 * Set LDO3 to 1.8V and LDO4 to 3.3V for Beaglebone Black
+         * and PocketBeagle.
 	 */
-	if (board_is_bone()) {
+	if (board_is_bone() && !board_is_pb()) {
 		if (tps65217_reg_write(TPS65217_PROT_LEVEL_2,
 				       TPS65217_DEFLS1,
 				       TPS65217_LDO_VOLTAGE_OUT_3_3,
@@ -859,7 +860,7 @@ int board_eth_init(bd_t *bis)
 	(defined(CONFIG_SPL_ETH_SUPPORT) && defined(CONFIG_SPL_BUILD))
 
 #ifdef CONFIG_DRIVER_TI_CPSW
-	if (board_is_bone() || board_is_bone_lt() ||
+	if ((board_is_bone() && !board_is_pb()) || board_is_bone_lt() ||
 	    board_is_idk()) {
 		writel(MII_MODE_ENABLE, &cdev->miisel);
 		cpsw_slaves[0].phy_if = cpsw_slaves[1].phy_if =
@@ -927,6 +928,8 @@ int board_fit_config_name_match(const char *name)
 {
 	if (board_is_gp_evm() && !strcmp(name, "am335x-evm"))
 		return 0;
+	else if (board_is_pb() && !strcmp(name, "am335x-pocketbeagle"))
+		return 0;
 	else if (board_is_bone() && !strcmp(name, "am335x-bone"))
 		return 0;
 	else if (board_is_bone_lt() && !strcmp(name, "am335x-boneblack"))
@@ -936,8 +939,6 @@ int board_fit_config_name_match(const char *name)
 	else if (board_is_bbg1() && !strcmp(name, "am335x-bonegreen"))
 		return 0;
 	else if (board_is_icev2() && !strcmp(name, "am335x-icev2"))
-		return 0;
-	else if (board_is_pb() && !strcmp(name, "am335x-pocketbeagle"))
 		return 0;
 	else
 		return -1;
