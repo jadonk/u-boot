@@ -134,7 +134,24 @@
 	"ramboot=echo Booting from ramdisk ...; " \
 		"run ramargs; " \
 		"bootz ${loadaddr} ${rdaddr} ${fdtaddr}\0" \
+	"pb_eeprom_hdr=" \
+		"mw 82001000 ee3355aa; " \
+		"mw 82001004 35333341; " \
+		"mw 82001008 4c474250\0" \
+	"serverip=192.168.1.1\0" \
+	"ipaddr=192.168.1.2\0" \
+	"if_netconsole=ping $serverip\0" \
+	"start_netconsole=" \
+		"setenv ncip $serverip; " \
+		"setenv bootdelay 10; " \
+		"setenv stdin serial,nc; " \
+		"setenv stdout serial,nc; " \
+		"setenv stderr serial,nc; " \
+		"version\0" \
+	"preboot=run if_netconsole start_netconsole\0"\
 	"findfdt="\
+		"if test $board_name = A335PBGL; then " \
+			"setenv fdtfile am335x-bone.dtb; fi; " \
 		"if test $board_name = A335BONE; then " \
 			"setenv fdtfile am335x-bone.dtb; fi; " \
 		"if test $board_name = A335BNLT; then " \

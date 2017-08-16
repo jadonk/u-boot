@@ -27,7 +27,7 @@
 static inline int board_is_pb(void)
 {
 /*
-	return board_ti_is("A335BONEPB", 10);
+	return board_ti_is("A335PBGL");
 */
 	return 1;
 }

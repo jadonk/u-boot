@@ -39,7 +39,9 @@
 #define CONFIG_MII			/* Required in net/eth.c */
 #endif
 
+#ifndef CONFIG_DISABLE_CPSW
 #define CONFIG_DRIVER_TI_CPSW		/* Driver for IP block */
+#endif
 /*
  * RTC related defines. To use bootcount you must set bootlimit in the
  * environment to a non-zero value and enable CONFIG_BOOTCOUNT_LIMIT
