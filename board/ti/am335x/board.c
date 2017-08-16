@@ -622,7 +622,7 @@ int board_init(void)
 	gpmc_init();
 #endif
 
-#if !(defined(CONFIG_SPL_BUILD) || defined(CONFIG_DISABLE_CPSW)) || \
+#if !defined(CONFIG_SPL_BUILD) || \
 	(defined(CONFIG_SPL_ETH_SUPPORT) && defined(CONFIG_SPL_BUILD))
 	if (board_is_icev2()) {
 		int rv;
