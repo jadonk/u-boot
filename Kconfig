@@ -20,6 +20,12 @@ config BROKEN
 	  This option cannot be enabled. It is used as dependency
 	  for broken and incomplete features.
 
+config DISABLE_CPSW
+	bool "Total hack"
+	default n
+	help
+	  Yuck. Disable CPSW on PocketBeagle.
+
 config LOCALVERSION
 	string "Local version - append to U-Boot release"
 	help
