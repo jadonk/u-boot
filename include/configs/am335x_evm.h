@@ -57,10 +57,10 @@
 
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
-#define BOOTENV_DEV_LEGACY_MMC(devtypeu, devtypel, instance) \
+#define BOOTENV_DEV_LEGACY_MMC(devtypeu, devtypel, instanc, devpart) \
 	"bootcmd_" #devtypel #instance "=" \
-	"setenv mmcdev " #instance"; "\
-	"setenv bootpart " #instance":2 ; "\
+	"setenv mmcdev " #instance "; "\
+	"setenv bootpart " #instance ":" #devpart "; "\
 	"run mmcboot\0"
 
 #define BOOTENV_DEV_NAME_LEGACY_MMC(devtypeu, devtypel, instance) \
@@ -75,9 +75,11 @@
 
 #define BOOT_TARGET_DEVICES(func) \
 	func(MMC, mmc, 0) \
-	func(LEGACY_MMC, legacy_mmc, 0) \
+	func(LEGACY_MMC, legacy_mmc, 0, 2) \
+	func(LEGACY_MMC, legacy_mmc, 0, 1) \
 	func(MMC, mmc, 1) \
-	func(LEGACY_MMC, legacy_mmc, 1) \
+	func(LEGACY_MMC, legacy_mmc, 1, 2) \
+	func(LEGACY_MMC, legacy_mmc, 1, 1) \
 	func(NAND, nand, 0) \
 	func(PXE, pxe, na) \
 	func(DHCP, dhcp, na)
