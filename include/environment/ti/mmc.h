@@ -23,9 +23,10 @@
 	"bootenvfile=uEnv.txt\0" \
 	"importbootenv=echo Importing environment from mmc${mmcdev} ...; " \
 		"env import -t ${loadaddr} ${filesize}\0" \
-	"loadbootenv=fatload mmc ${mmcdev} ${loadaddr} ${bootenvfile}\0" \
-	"loadimage=load ${devtype} ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
-	"loadfdt=load ${devtype} ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}\0" \
+	"loadbootenv=if fatload mmc ${mmcdev} ${loadaddr} ${bootenvfile}; then echo Found ${bootenvfile} in FAT partition; else load mmc ${mmmcdev} ${loadaddr} ${bootenvfile}; fi\0" \
+	"loadimage=if test -n ${uname_r}; then load ${devtype} ${bootpart} ${loadaddr} ${bootdir}/vmlinuz-${uname_r}; run loadrd; else load ${devtype} ${bootpart} ${loadaddr} ${bootdir}/${bootfile}\0" \
+	"loadrd=load ${devtype} ${bootpart} ${rdaddr} ${bootdir}/initrd.img-${uname_r}; setenv rdsize ${filesize}\0" \
+	"loadfdt=if test -n ${uname_r}; load ${devtype} ${bootpart} ${fdtaddr} ${bootdir}/dtbs/${uname_r}/${fdtfile}; else load ${devtype} ${bootpart} ${fdtaddr} ${bootdir}/${fdtfile}; fi;\0" \
 	"envboot=mmc dev ${mmcdev}; " \
 		"if mmc rescan; then " \
 			"echo SD/MMC found on device ${mmcdev};" \
@@ -45,7 +46,11 @@
 	"mmcloados=run args_mmc; " \
 		"if test ${boot_fdt} = yes || test ${boot_fdt} = try; then " \
 			"if run loadfdt; then " \
-				"bootz ${loadaddr} - ${fdtaddr}; " \
+				"if test -n ${uname_r}; then " \
+					"bootz ${loadaddr} ${rdaddr}:${rdsize} ${fdtaddr}; " \
+				"else " \
+					"bootz ${loadaddr} - ${fdtaddr}; " \
+				"fi; " \
 			"else " \
 				"if test ${boot_fdt} = try; then " \
 					"bootz; " \
