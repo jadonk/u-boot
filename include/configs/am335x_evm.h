@@ -58,11 +58,10 @@
 #define CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
 
 #define BOOTENV_DEV_LEGACY_MMC(devtypeu, devtypel, instance) \
-	"bootcmd_" #devtypel #instance "_2=" \
+	"bootcmd_" #devtypel #instance "=" \
 	"setenv mmcdev " #instance"; "\
 	"setenv bootpart " #instance":2; "\
-	"run mmcboot\0"\
-	"bootcmd_" #devtypel #instance "_1=" \
+	"run mmcboot;"\
 	"setenv mmcdev " #instance"; "\
 	"setenv bootpart " #instance":1; "\
 	"run mmcboot\0"
