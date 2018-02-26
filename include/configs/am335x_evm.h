@@ -275,6 +275,10 @@
 #define CONFIG_USB_FUNCTION_MASS_STORAGE
 #endif /* CONFIG_USB_MUSB_GADGET */
 
+#if defined(CONFIG_CMD_USB_MASS_STORAGE)
+#define CONFIG_USB_FUNCTION_MASS_STORAGE
+#endif
+
 /*
  * Disable MMC DM for SPL build and can be re-enabled after adding
  * DM support in SPL
