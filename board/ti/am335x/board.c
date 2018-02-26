@@ -42,6 +42,33 @@
 
 DECLARE_GLOBAL_DATA_PTR;
 
+#define REQUEST_AND_SET_GPIO(N)	request_and_set_gpio(N, #N, 1);
+#define REQUEST_AND_CLR_GPIO(N)	request_and_set_gpio(N, #N, 0);
+static void request_and_set_gpio(int gpio, char *name, int val)
+{
+	int ret;
+
+	ret = gpio_request(gpio, name);
+	if (ret < 0) {
+		printf("%s: Unable to request %s\n", __func__, name);
+		return;
+	}
+
+	ret = gpio_direction_output(gpio, 0);
+	if (ret < 0) {
+		printf("%s: Unable to set %s  as output\n", __func__, name);
+		goto err_free_gpio;
+	}
+
+	gpio_set_value(gpio, val);
+
+	return;
+
+err_free_gpio:
+	gpio_free(gpio);
+}
+
+
 /* GPIO that controls power to DDR on EVM-SK */
 #define GPIO_TO_PIN(bank, gpio)		(32 * (bank) + (gpio))
 #define GPIO_DDR_VTT_EN		GPIO_TO_PIN(0, 7)
@@ -76,6 +103,8 @@ void do_board_detect(void)
 	if (ti_i2c_eeprom_am_get(CONFIG_EEPROM_BUS_ADDRESS,
 				 CONFIG_EEPROM_CHIP_ADDRESS))
 		printf("ti_i2c_eeprom_init failed\n");
+
+	REQUEST_AND_SET_GPIO(53); // JDK DEBUG
 }
 #endif
 
@@ -274,6 +303,8 @@ const struct dpll_params *get_dpll_ddr_params(void)
 
 static u8 bone_not_connected_to_ac_power(void)
 {
+	REQUEST_AND_SET_GPIO(54); // JDK DEBUG
+
 	if (board_is_bone() && !board_is_pb()) {
 		uchar pmic_status_reg;
 		if (tps65217_reg_read(TPS65217_STATUS,
@@ -566,33 +597,6 @@ void sdram_init(void)
 
 #if !defined(CONFIG_SPL_BUILD) || \
 	(defined(CONFIG_SPL_ETH_SUPPORT) && defined(CONFIG_SPL_BUILD))
-static void request_and_set_gpio(int gpio, char *name, int val)
-{
-	int ret;
-
-	ret = gpio_request(gpio, name);
-	if (ret < 0) {
-		printf("%s: Unable to request %s\n", __func__, name);
-		return;
-	}
-
-	ret = gpio_direction_output(gpio, 0);
-	if (ret < 0) {
-		printf("%s: Unable to set %s  as output\n", __func__, name);
-		goto err_free_gpio;
-	}
-
-	gpio_set_value(gpio, val);
-
-	return;
-
-err_free_gpio:
-	gpio_free(gpio);
-}
-
-#define REQUEST_AND_SET_GPIO(N)	request_and_set_gpio(N, #N, 1);
-#define REQUEST_AND_CLR_GPIO(N)	request_and_set_gpio(N, #N, 0);
-
 /**
  * RMII mode on ICEv2 board needs 50MHz clock. Given the clock
  * synthesizer With a capacitor of 18pF, and 25MHz input clock cycle
