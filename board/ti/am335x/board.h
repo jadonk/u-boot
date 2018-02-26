@@ -26,10 +26,7 @@
 
 static inline int board_is_pb(void)
 {
-/*
 	return board_ti_is("A335PBGL");
-*/
-	return 1;
 }
 
 static inline int board_is_bone(void)
@@ -49,7 +46,7 @@ static inline int board_is_bbg1(void)
 
 static inline int board_is_beaglebonex(void)
 {
-	return board_is_pb() || board_is_bone() || board_is_bone_lt() || board_is_bbg1();
+	return board_is_bone() || board_is_bone_lt() || board_is_bbg1();
 }
 
 static inline int board_is_evm_sk(void)
