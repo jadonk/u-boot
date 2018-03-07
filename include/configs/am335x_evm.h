@@ -61,7 +61,10 @@
 #define BOOTENV_DEV_LEGACY_MMC(devtypeu, devtypel, instance) \
 	"bootcmd_" #devtypel #instance "=" \
 	"setenv mmcdev " #instance"; "\
-	"setenv bootpart " #instance":2 ; "\
+	"setenv bootpart " #instance":2; "\
+	"run mmcboot;"\
+	"setenv mmcdev " #instance"; "\
+	"setenv bootpart " #instance":1; "\
 	"run mmcboot\0"
 
 #define BOOTENV_DEV_NAME_LEGACY_MMC(devtypeu, devtypel, instance) \
