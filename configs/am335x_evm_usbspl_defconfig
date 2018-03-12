@@ -5,7 +5,7 @@ CONFIG_AM33XX=y
 # CONFIG_SPL_NAND_SUPPORT is not set
 CONFIG_DISTRO_DEFAULTS=y
 # CONFIG_ANDROID_BOOT_IMAGE is not set
-CONFIG_BOOTCOMMAND="dhcp;tftp 0x82000000 zImage;tftp 0x88000000 am335x-pocketbeagle.dtb;tftp 0x88080000 rootfs.cpio.uboot;setenv bootargs console=ttyS0,115200n8 root=/dev/ram0 rw;bootz 0x82000000 0x88080000 0x88000000"
+CONFIG_BOOTCOMMAND="dhcp;setenv ncip $serverip;setenv stdout serial,nc;setenv stderr serial,nc;setenv stdin serial,nc;version"
 CONFIG_CONSOLE_MUX=y
 CONFIG_SYS_CONSOLE_IS_IN_ENV=y
 # CONFIG_SYS_CONSOLE_OVERWRITE_ROUTINE is not set
