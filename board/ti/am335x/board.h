@@ -36,7 +36,10 @@ static inline int board_is_bone_lt(void)
 
 static inline int board_is_pb(void)
 {
+/*
 	return board_ti_is("A335PBGL");
+*/
+	return 1;
 }
 
 static inline int board_is_bbg1(void)
