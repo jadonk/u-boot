@@ -5,7 +5,7 @@ CONFIG_AM33XX=y
 # CONFIG_SPL_NAND_SUPPORT is not set
 CONFIG_DISTRO_DEFAULTS=y
 # CONFIG_ANDROID_BOOT_IMAGE is not set
-CONFIG_BOOTCOMMAND="setenv bootpart 0:1;run findfdt;run mmcboot;setenv bootpart 1:1;run findfdt;setenv mmcdev 1;run mmcboot;dhcp;setenv ncip $serverip;setenv stdout serial,nc;setenv stderr serial,nc;setenv stdin serial,nc;version"
+CONFIG_BOOTCOMMAND="setenv bootpart 0:1;setenv fdtfile board.dtb;run mmcboot;setenv bootpart 1:1;setenv mmcdev 1;run mmcboot;dhcp;setenv ncip $serverip;setenv stdout serial,nc;setenv stderr serial,nc;setenv stdin serial,nc;version"
 CONFIG_CONSOLE_MUX=y
 CONFIG_SYS_CONSOLE_ENV_OVERWRITE=y
 CONFIG_SYS_CONSOLE_INFO_QUIET=y
