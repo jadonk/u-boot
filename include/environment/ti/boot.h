@@ -35,7 +35,6 @@
 	"uuid_disk=${uuid_gpt_disk};" \
 	"name=xloader,start=128K,size=256K,uuid=${uuid_gpt_xloader};" \
 	"name=bootloader,size=1792K,uuid=${uuid_gpt_bootloader};" \
-	"name=environment,size=128K,uuid=${uuid_gpt_environment};" \
 	"name=misc,size=128K,uuid=${uuid_gpt_misc};" \
 	"name=reserved,size=256K,uuid=${uuid_gpt_reserved};" \
 	"name=efs,size=16M,uuid=${uuid_gpt_efs};" \
@@ -77,11 +76,34 @@
 	"partitions=" PARTS_DEFAULT "\0" \
 	"optargs=\0" \
 	"dofastboot=0\0" \
+<<<<<<< HEAD
 	"read_board_eeprom="\
 		"if test $board_eeprom_header = beagle_x15_revb1_blank; then " \
 			"run eeprom_dump; run eeprom_x15_b1; reset; fi; " \
 		"if test $board_eeprom_header = beagle_x15_revc_blank; then " \
 			"run eeprom_dump; run eeprom_x15_c; reset; fi;  \0 "
+=======
+	"emmc_linux_boot=" \
+		"echo Trying to boot Linux from eMMC ...; " \
+		"setenv mmcdev 1; " \
+		"setenv bootpart 1:2; " \
+		"setenv mmcroot /dev/mmcblk0p2 rw; " \
+		"run mmcboot;\0" \
+	"emmc_android_boot=" \
+		"echo Trying to boot Android from eMMC ...; " \
+		"run update_to_fit; " \
+		"setenv eval_bootargs setenv bootargs $bootargs; " \
+		"run eval_bootargs; " \
+		"setenv mmcdev 1; " \
+		"setenv machid fe6; " \
+		"mmc dev $mmcdev; " \
+		"mmc rescan; " \
+		AVB_VERIFY_CHECK \
+		"part start mmc ${mmcdev} boot boot_start; " \
+		"part size mmc ${mmcdev} boot boot_size; " \
+		"mmc read ${loadaddr} ${boot_start} ${boot_size}; " \
+		"bootm ${loadaddr}#${fdtfile};\0 "
+>>>>>>> c5bbfaf05dc8592b479a44df6abaadbab54fec2b
 
 #ifdef CONFIG_OMAP54XX
 
