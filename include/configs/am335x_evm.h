@@ -310,6 +310,7 @@
 #define CONFIG_SYS_ENV_SECT_SIZE	512
 #define CONFIG_ENV_OFFSET		(2 << 20)
 #define CONFIG_ENV_OFFSET_REDUND	((2 << 20) + (128 << 10))
+#define CONFIG_SYS_MMC_ENV_DEV		0
 #endif
 
 /* SPI flash. */
