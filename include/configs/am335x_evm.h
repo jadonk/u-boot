@@ -296,6 +296,20 @@
 #define CONFIG_ENV_OFFSET		0x001c0000
 #define CONFIG_ENV_OFFSET_REDUND	0x001e0000
 #define CONFIG_SYS_ENV_SECT_SIZE	CONFIG_SYS_NAND_BLOCK_SIZE
+#else
+/* MMC ?
+ * 0     - 128k  : empty / partition table
+ * 128k  - 256k  : SPL
+ * 384k  - 1152k : U-Boot
+ * 1152k - 2M    : empty
+ * 2048k - 2176k : Env copy 1
+ * 2176k - 2304k : Env copy 2
+ * 2304k - 10M   : empty
+ * 10M -         : Ext4 file system
+ */
+#define CONFIG_SYS_ENV_SECT_SIZE	512
+#define CONFIG_ENV_OFFSET		(2 << 20)
+#define CONFIG_ENV_OFFSET_REDUND	((2 << 20) + (128 << 10))
 #endif
 
 /* SPI flash. */
