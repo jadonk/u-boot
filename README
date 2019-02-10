@@ -1146,9 +1146,6 @@ The following options need to be configured:
 		CONFIG_DFU_OVER_USB
 		This enables the USB portion of the DFU USB class
 
-		CONFIG_DFU_MMC
-		This enables support for exposing (e)MMC devices via DFU.
-
 		CONFIG_DFU_NAND
 		This enables support for exposing NAND devices via DFU.
 
@@ -1428,15 +1425,6 @@ The following options need to be configured:
 		address belongs to the local subnet or needs to be
 		forwarded through a router.
 		(Environment variable "netmask")
-
-- Multicast TFTP Mode:
-		CONFIG_MCAST_TFTP
-
-		Defines whether you want to support multicast TFTP as per
-		rfc-2090; for example to work with atftp.  Lets lots of targets
-		tftp down the same boot image concurrently.  Note: the Ethernet
-		driver in use must provide a function: mcast() to join/leave a
-		multicast group.
 
 - BOOTP Recovery Mode:
 		CONFIG_BOOTP_RANDOM_DELAY
@@ -1932,14 +1920,6 @@ The following options need to be configured:
 		SPI configuration items (port pins to use, etc). For
 		an example, see include/configs/sacsng.h.
 
-		CONFIG_HARD_SPI
-
-		Enables a hardware SPI driver for general-purpose reads
-		and writes.  As with CONFIG_SOFT_SPI, the board configuration
-		must define a list of chip-select function pointers.
-		Currently supported on some MPC8xxx processors.	 For an
-		example, see include/configs/mpc8349emds.h.
-
 		CONFIG_SYS_SPI_MXC_WAIT
 		Timeout for waiting until spi transfer completed.
 		default: (CONFIG_SYS_HZ/100)     /* 10 ms */
@@ -2006,13 +1986,6 @@ The following options need to be configured:
 		200 ms.
 
 - Configuration Management:
-		CONFIG_BUILD_TARGET
-
-		Some SoCs need special image types (e.g. U-Boot binary
-		with a special header) as build targets. By defining
-		CONFIG_BUILD_TARGET in the SoC / board header, this
-		special image will be automatically built upon calling
-		make / buildman.
 
 		CONFIG_IDENT_STRING
 

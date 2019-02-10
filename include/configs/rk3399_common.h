@@ -28,7 +28,6 @@
 #define CONFIG_SYS_BOOTM_LEN	(64 << 20)	/* 64M */
 
 /* MMC/SD IP block */
-#define CONFIG_BOUNCE_BUFFER
 #define CONFIG_ROCKCHIP_SDHCI_MAX_FREQ	200000000
 
 /* RAW SD card / eMMC locations. */
@@ -50,11 +49,16 @@
 	"kernel_addr_r=0x02080000\0" \
 	"ramdisk_addr_r=0x04000000\0"
 
+#ifndef ROCKCHIP_DEVICE_SETTINGS
+#define ROCKCHIP_DEVICE_SETTINGS
+#endif
+
 #include <config_distro_bootcmd.h>
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	ENV_MEM_LAYOUT_SETTINGS \
 	"fdtfile=" CONFIG_DEFAULT_FDT_FILE "\0" \
 	"partitions=" PARTS_DEFAULT \
+	ROCKCHIP_DEVICE_SETTINGS \
 	BOOTENV
 
 #endif

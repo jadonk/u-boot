@@ -221,8 +221,8 @@ static efi_status_t EFIAPI efi_file_open(struct efi_file_handle *file,
 	struct file_handle *fh = to_fh(file);
 	efi_status_t ret;
 
-	EFI_ENTRY("%p, %p, \"%ls\", %llx, %llu", file, new_handle, file_name,
-		  open_mode, attributes);
+	EFI_ENTRY("%p, %p, \"%ls\", %llx, %llu", file, new_handle,
+		  (wchar_t *)file_name, open_mode, attributes);
 
 	/* Check parameters */
 	if (!file || !new_handle || !file_name) {
@@ -563,7 +563,7 @@ static efi_status_t EFIAPI efi_file_getinfo(struct efi_file_handle *file,
 		if (fh->isdir)
 			info->attribute |= EFI_FILE_DIRECTORY;
 
-		ascii2unicode((u16 *)info->file_name, filename);
+		ascii2unicode(info->file_name, filename);
 	} else if (!guidcmp(info_type, &efi_file_system_info_guid)) {
 		struct efi_file_system_info *info = buffer;
 		disk_partition_t part;

@@ -72,6 +72,7 @@ static const struct {
 		.id = 0x20,
 		.ver = 0x12c,
 		.name = "5cg",
+		.evexists = 1,
 	},
 	{
 		.id = 0x21,
@@ -88,6 +89,7 @@ static const struct {
 		.id = 0x21,
 		.ver = 0x12c,
 		.name = "4cg",
+		.evexists = 1,
 	},
 	{
 		.id = 0x30,
@@ -104,6 +106,7 @@ static const struct {
 		.id = 0x30,
 		.ver = 0x12c,
 		.name = "7cg",
+		.evexists = 1,
 	},
 	{
 		.id = 0x38,
@@ -234,14 +237,18 @@ int chip_id(unsigned char id)
 
 #define ZYNQMP_VERSION_SIZE		9
 #define ZYNQMP_PL_STATUS_BIT		9
+#define ZYNQMP_IPDIS_VCU_BIT		8
 #define ZYNQMP_PL_STATUS_MASK		BIT(ZYNQMP_PL_STATUS_BIT)
 #define ZYNQMP_CSU_VERSION_MASK		~(ZYNQMP_PL_STATUS_MASK)
+#define ZYNQMP_CSU_VCUDIS_VER_MASK	ZYNQMP_CSU_VERSION_MASK & \
+					~BIT(ZYNQMP_IPDIS_VCU_BIT)
+#define MAX_VARIANTS_EV			3
 
 #if defined(CONFIG_FPGA) && defined(CONFIG_FPGA_ZYNQMPPL) && \
 	!defined(CONFIG_SPL_BUILD)
 static char *zynqmp_get_silicon_idcode_name(void)
 {
-	u32 i, id, ver;
+	u32 i, id, ver, j;
 	char *buf;
 	static char name[ZYNQMP_VERSION_SIZE];
 
@@ -249,24 +256,43 @@ static char *zynqmp_get_silicon_idcode_name(void)
 	ver = chip_id(IDCODE2);
 
 	for (i = 0; i < ARRAY_SIZE(zynqmp_devices); i++) {
-		if ((zynqmp_devices[i].id == id) &&
-		    (zynqmp_devices[i].ver == (ver &
-		    ZYNQMP_CSU_VERSION_MASK))) {
-			strncat(name, "zu", 2);
-			strncat(name, zynqmp_devices[i].name,
-				ZYNQMP_VERSION_SIZE - 3);
-			break;
+		if (zynqmp_devices[i].id == id) {
+			if (zynqmp_devices[i].evexists &&
+			    !(ver & ZYNQMP_PL_STATUS_MASK))
+				break;
+			if (zynqmp_devices[i].ver == (ver &
+			    ZYNQMP_CSU_VERSION_MASK))
+				break;
 		}
 	}
 
 	if (i >= ARRAY_SIZE(zynqmp_devices))
 		return "unknown";
 
-	if (!zynqmp_devices[i].evexists)
+	strncat(name, "zu", 2);
+	if (!zynqmp_devices[i].evexists ||
+	    (ver & ZYNQMP_PL_STATUS_MASK)) {
+		strncat(name, zynqmp_devices[i].name,
+			ZYNQMP_VERSION_SIZE - 3);
 		return name;
+	}
 
-	if (ver & ZYNQMP_PL_STATUS_MASK)
-		return name;
+	/*
+	 * Here we are means, PL not powered up and ev variant
+	 * exists. So, we need to ignore VCU disable bit(8) in
+	 * version and findout if its CG or EG/EV variant.
+	 */
+	for (j = 0; j < MAX_VARIANTS_EV; j++, i++) {
+		if ((zynqmp_devices[i].ver & ~BIT(ZYNQMP_IPDIS_VCU_BIT)) ==
+		    (ver & ZYNQMP_CSU_VCUDIS_VER_MASK)) {
+			strncat(name, zynqmp_devices[i].name,
+				ZYNQMP_VERSION_SIZE - 3);
+			break;
+		}
+	}
+
+	if (j >= MAX_VARIANTS_EV)
+		return "unknown";
 
 	if (strstr(name, "eg") || strstr(name, "ev")) {
 		buf = strstr(name, "e");
@@ -463,6 +489,7 @@ void reset_cpu(ulong addr)
 {
 }
 
+#if defined(CONFIG_BOARD_LATE_INIT)
 static const struct {
 	u32 bit;
 	const char *name;
@@ -517,6 +544,10 @@ int board_late_init(void)
 	char *env_targets;
 	int ret;
 
+#if defined(CONFIG_USB_ETHER) && !defined(CONFIG_USB_GADGET_DOWNLOAD)
+	usb_ether_init();
+#endif
+
 	if (!(gd->flags & GD_FLG_ENV_DEFAULT)) {
 		debug("Saved variables - Skipping\n");
 		return 0;
@@ -557,6 +588,8 @@ int board_late_init(void)
 	case SD_MODE:
 		puts("SD_MODE\n");
 		if (uclass_get_device_by_name(UCLASS_MMC,
+					      "mmc@ff160000", &dev) &&
+		    uclass_get_device_by_name(UCLASS_MMC,
 					      "sdhci@ff160000", &dev)) {
 			puts("Boot from SD0 but without SD0 enabled!\n");
 			return -1;
@@ -573,6 +606,8 @@ int board_late_init(void)
 	case SD_MODE1:
 		puts("SD_MODE1\n");
 		if (uclass_get_device_by_name(UCLASS_MMC,
+					      "mmc@ff170000", &dev) &&
+		    uclass_get_device_by_name(UCLASS_MMC,
 					      "sdhci@ff170000", &dev)) {
 			puts("Boot from SD1 but without SD1 enabled!\n");
 			return -1;
@@ -625,6 +660,7 @@ int board_late_init(void)
 
 	return 0;
 }
+#endif
 
 int checkboard(void)
 {

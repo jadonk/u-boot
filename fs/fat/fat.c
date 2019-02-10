@@ -145,7 +145,8 @@ static void get_name(dir_entry *dirent, char *s_name)
 }
 
 static int flush_dirty_fat_buffer(fsdata *mydata);
-#if !defined(CONFIG_FAT_WRITE)
+
+#if !CONFIG_IS_ENABLED(FAT_WRITE)
 /* Stub for read only operation */
 int flush_dirty_fat_buffer(fsdata *mydata)
 {
@@ -571,6 +572,17 @@ static int get_fs_info(fsdata *mydata)
 				mydata->sect_size, cur_part_info.blksz);
 		return -1;
 	}
+	if (mydata->clust_size == 0) {
+		printf("Error: FAT cluster size not set\n");
+		return -1;
+	}
+	if ((unsigned int)mydata->clust_size * mydata->sect_size >
+	    MAX_CLUSTSIZE) {
+		printf("Error: FAT cluster size too big (cs=%u, max=%u)\n",
+		       (unsigned int)mydata->clust_size * mydata->sect_size,
+		       MAX_CLUSTSIZE);
+		return -1;
+	}
 
 	if (mydata->fatsize == 32) {
 		mydata->data_begin = mydata->rootdir_sect -
@@ -806,6 +818,9 @@ static dir_entry *extract_vfat_name(fat_itr *itr)
 		int idx = 0;
 
 		slot2str((dir_slot *)dent, buf, &idx);
+
+		if (n + idx >= sizeof(itr->l_name))
+			return NULL;
 
 		/* shift accumulated long-name up and copy new part in: */
 		memmove(itr->l_name + idx, itr->l_name, n);

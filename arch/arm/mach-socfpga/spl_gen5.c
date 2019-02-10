@@ -55,7 +55,7 @@ u32 spl_boot_device(void)
 #ifdef CONFIG_SPL_MMC_SUPPORT
 u32 spl_boot_mode(const u32 boot_device)
 {
-#if defined(CONFIG_SPL_FAT_SUPPORT) || defined(CONFIG_SPL_EXT_SUPPORT)
+#if defined(CONFIG_SPL_FS_FAT) || defined(CONFIG_SPL_FS_EXT4)
 	return MMCSD_MODE_FS;
 #else
 	return MMCSD_MODE_RAW;
@@ -92,8 +92,11 @@ void board_init_f(ulong dummy)
 
 	/* Put everything into reset but L4WD0. */
 	socfpga_per_reset_all();
-	/* Put FPGA bridges into reset too. */
-	socfpga_bridges_reset(1);
+
+	if (!socfpga_is_booting_from_fpga()) {
+		/* Put FPGA bridges into reset too. */
+		socfpga_bridges_reset(1);
+	}
 
 	socfpga_per_reset(SOCFPGA_RESET(SDR), 0);
 	socfpga_per_reset(SOCFPGA_RESET(UART0), 0);
@@ -163,5 +166,6 @@ void board_init_f(ulong dummy)
 		hang();
 	}
 
-	socfpga_bridges_reset(1);
+	if (!socfpga_is_booting_from_fpga())
+		socfpga_bridges_reset(1);
 }

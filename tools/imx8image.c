@@ -555,7 +555,8 @@ static void set_image_array_entry(flash_header_v3_t *container,
 		} else if (soc == QM && core == CORE_CA72) {
 			meta = IMAGE_A72_DEFAULT_META(custom_partition);
 		} else {
-			fprintf(stderr, "Error: invalid AP core id: %lu\n",
+			fprintf(stderr,
+				"Error: invalid AP core id: %" PRIu64 "\n",
 				core);
 			exit(EXIT_FAILURE);
 		}
@@ -577,7 +578,9 @@ static void set_image_array_entry(flash_header_v3_t *container,
 			core = CORE_CM4_1;
 			meta = IMAGE_M4_1_DEFAULT_META(custom_partition);
 		} else {
-			fprintf(stderr, "Error: invalid m4 core id: %lu\n", core);
+			fprintf(stderr,
+				"Error: invalid m4 core id: %" PRIu64 "\n",
+				core);
 			exit(EXIT_FAILURE);
 		}
 		img->hab_flags |= IMG_TYPE_EXEC;
@@ -674,7 +677,7 @@ static int get_container_image_start_pos(image_t *image_stack, uint32_t align)
 			fclose(fd);
 
 			if (header.tag != IVT_HEADER_TAG_B0) {
-				fprintf(stderr, "header tag missmatched \n");
+				fprintf(stderr, "header tag mismatched \n");
 				exit(EXIT_FAILURE);
 			} else {
 				file_off +=

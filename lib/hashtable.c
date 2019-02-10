@@ -542,9 +542,8 @@ static int match_string(int flag, const char *str, const char *pat, void *priv)
 	case H_MATCH_REGEX:
 		{
 			struct slre *slrep = (struct slre *)priv;
-			struct cap caps[slrep->num_caps + 2];
 
-			if (slre_match(slrep, str, strlen(str), caps))
+			if (slre_match(slrep, str, strlen(str), NULL))
 				return 1;
 		}
 		break;
@@ -662,7 +661,7 @@ ssize_t hexport_r(struct hsearch_data *htab, const char sep, int flag,
 			return (-1);
 		}
 	} else {
-		size = totlen;
+		size = totlen + 1;
 	}
 
 	/* Check if the user provided a buffer */

@@ -28,7 +28,7 @@
 #endif
 #include <asm/gpio.h>
 #include <asm/io.h>
-#include <crc.h>
+#include <u-boot/crc.h>
 #include <environment.h>
 #include <linux/libfdt.h>
 #include <nand.h>
@@ -98,6 +98,10 @@ void i2c_init_board(void)
 	sunxi_gpio_set_cfgpin(SUNXI_GPH(2), SUN8I_GPH_TWI0);
 	sunxi_gpio_set_cfgpin(SUNXI_GPH(3), SUN8I_GPH_TWI0);
 	clock_twi_onoff(0, 1);
+#elif defined(CONFIG_MACH_SUN50I)
+	sunxi_gpio_set_cfgpin(SUNXI_GPH(0), SUN50I_GPH_TWI0);
+	sunxi_gpio_set_cfgpin(SUNXI_GPH(1), SUN50I_GPH_TWI0);
+	clock_twi_onoff(0, 1);
 #endif
 #endif
 
@@ -120,6 +124,10 @@ void i2c_init_board(void)
 	sunxi_gpio_set_cfgpin(SUNXI_GPH(4), SUN8I_GPH_TWI1);
 	sunxi_gpio_set_cfgpin(SUNXI_GPH(5), SUN8I_GPH_TWI1);
 	clock_twi_onoff(1, 1);
+#elif defined(CONFIG_MACH_SUN50I)
+	sunxi_gpio_set_cfgpin(SUNXI_GPH(2), SUN50I_GPH_TWI1);
+	sunxi_gpio_set_cfgpin(SUNXI_GPH(3), SUN50I_GPH_TWI1);
+	clock_twi_onoff(1, 1);
 #endif
 #endif
 
@@ -141,6 +149,10 @@ void i2c_init_board(void)
 #elif defined(CONFIG_MACH_SUN8I)
 	sunxi_gpio_set_cfgpin(SUNXI_GPE(12), SUN8I_GPE_TWI2);
 	sunxi_gpio_set_cfgpin(SUNXI_GPE(13), SUN8I_GPE_TWI2);
+	clock_twi_onoff(2, 1);
+#elif defined(CONFIG_MACH_SUN50I)
+	sunxi_gpio_set_cfgpin(SUNXI_GPE(14), SUN50I_GPE_TWI2);
+	sunxi_gpio_set_cfgpin(SUNXI_GPE(15), SUN50I_GPE_TWI2);
 	clock_twi_onoff(2, 1);
 #endif
 #endif
@@ -168,9 +180,15 @@ void i2c_init_board(void)
 #endif
 
 #ifdef CONFIG_R_I2C_ENABLE
+#ifdef CONFIG_MACH_SUN50I
+	clock_twi_onoff(5, 1);
+	sunxi_gpio_set_cfgpin(SUNXI_GPL(8), SUN50I_GPL_R_TWI);
+	sunxi_gpio_set_cfgpin(SUNXI_GPL(9), SUN50I_GPL_R_TWI);
+#else
 	clock_twi_onoff(5, 1);
 	sunxi_gpio_set_cfgpin(SUNXI_GPL(0), SUN8I_H3_GPL_R_TWI);
 	sunxi_gpio_set_cfgpin(SUNXI_GPL(1), SUN8I_H3_GPL_R_TWI);
+#endif
 #endif
 }
 
@@ -188,6 +206,10 @@ enum env_location env_get_location(enum env_operation op, int prio)
 		return ENVL_UNKNOWN;
 	}
 }
+#endif
+
+#ifdef CONFIG_DM_MMC
+static void mmc_pinmux_setup(int sdc);
 #endif
 
 /* add board specific code here */
@@ -250,6 +272,17 @@ int board_init(void)
 	 */
 	i2c_init_board();
 #endif
+
+#ifdef CONFIG_DM_MMC
+	/*
+	 * Temporary workaround for enabling MMC clocks until a sunxi DM
+	 * pinctrl driver lands.
+	 */
+	mmc_pinmux_setup(CONFIG_MMC_SUNXI_SLOT);
+#if CONFIG_MMC_SUNXI_SLOT_EXTRA != -1
+	mmc_pinmux_setup(CONFIG_MMC_SUNXI_SLOT_EXTRA);
+#endif
+#endif	/* CONFIG_DM_MMC */
 
 	/* Uses dm gpio code so do this here and not in i2c_init_board() */
 	return soft_i2c_board_init();
@@ -657,7 +690,7 @@ int g_dnl_board_usb_cable_connected(void)
 	struct phy phy;
 	int ret;
 
-	ret = uclass_get_device(UCLASS_USB_DEV_GENERIC, 0, &dev);
+	ret = uclass_get_device(UCLASS_USB_GADGET_GENERIC, 0, &dev);
 	if (ret) {
 		pr_err("%s: Cannot find USB device\n", __func__);
 		return ret;

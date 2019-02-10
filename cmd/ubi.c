@@ -101,7 +101,6 @@ static int ubi_check(char *name)
 	return 1;
 }
 
-
 static int verify_mkvol_req(const struct ubi_device *ubi,
 			    const struct ubi_mkvol_req *req)
 {
@@ -415,13 +414,8 @@ static int ubi_dev_scan(struct mtd_info *info, const char *vid_header_offset)
 	return 0;
 }
 
-int ubi_detach(void)
+static int ubi_detach(void)
 {
-	if (mtdparts_init() != 0) {
-		printf("Error initializing mtdparts!\n");
-		return 1;
-	}
-
 #ifdef CONFIG_CMD_UBIFS
 	/*
 	 * Automatically unmount UBIFS partition when user
@@ -478,14 +472,8 @@ static int do_ubi(cmd_tbl_t *cmdtp, int flag, int argc, char * const argv[])
 	if (argc < 2)
 		return CMD_RET_USAGE;
 
-
-	if (strcmp(argv[1], "detach") == 0) {
-		if (argc < 2)
-			return CMD_RET_USAGE;
-
+	if (strcmp(argv[1], "detach") == 0)
 		return ubi_detach();
-	}
-
 
 	if (strcmp(argv[1], "part") == 0) {
 		const char *vid_header_offset = NULL;

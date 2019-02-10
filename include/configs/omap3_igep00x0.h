@@ -20,10 +20,6 @@
 
 #define CONFIG_REVISION_TAG		1
 
-/* GPIO banks */
-#define CONFIG_OMAP3_GPIO_2		/* GPIO32..63   is in GPIO bank 2 */
-#define CONFIG_OMAP3_GPIO_4		/* GPIO96..127  is in GPIO bank 4 */
-
 /* TPS65950 */
 #define PBIASLITEVMODE1			(1 << 8)
 
@@ -35,16 +31,6 @@
 #define IGEP0030_USB_TRANSCEIVER_RESET		54
 #define GPIO_IGEP00X0_BOARD_DETECTION		28
 #define GPIO_IGEP00X0_REVISION_DETECTION	129
-
-/* USB device configuration */
-#define CONFIG_USB_DEVICE		1
-#define CONFIG_USB_TTY			1
-
-/* Change these to suit your needs */
-#define CONFIG_USBD_VENDORID		0x0451
-#define CONFIG_USBD_PRODUCTID		0x5678
-#define CONFIG_USBD_MANUFACTURER	"Texas Instruments"
-#define CONFIG_USBD_PRODUCT_NAME	"IGEP"
 
 #ifndef CONFIG_SPL_BUILD
 

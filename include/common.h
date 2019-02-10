@@ -14,9 +14,6 @@ typedef volatile unsigned long	vu_long;
 typedef volatile unsigned short vu_short;
 typedef volatile unsigned char	vu_char;
 
-/* Allow sharing constants with type modifiers between C and assembly. */
-#define _AC(X, Y)       (X##Y)
-
 #include <config.h>
 #include <errno.h>
 #include <time.h>
@@ -107,6 +104,17 @@ int mdm_init(void);
  * @param size	Size of DRAM (which should be displayed along with other info)
  */
 void board_show_dram(phys_size_t size);
+
+/**
+ * Get the uppermost pointer that is valid to access
+ *
+ * Some systems may not map all of their address space. This function allows
+ * boards to indicate what their highest support pointer value is for DRAM
+ * access.
+ *
+ * @param total_size	Size of U-Boot (unused?)
+ */
+ulong board_get_usable_ram_top(ulong total_size);
 
 /**
  * arch_fixup_fdt() - Write arch-specific information to fdt
@@ -240,7 +248,8 @@ static inline int env_set_addr(const char *varname, const void *addr)
 }
 
 #ifdef CONFIG_AUTO_COMPLETE
-int env_complete(char *var, int maxv, char *cmdv[], int maxsz, char *buf);
+int env_complete(char *var, int maxv, char *cmdv[], int maxsz, char *buf,
+		 bool dollar_comp);
 #endif
 int get_env_id (void);
 
@@ -277,13 +286,6 @@ int  eeprom_write (unsigned dev_addr, unsigned offset, uchar *buffer, unsigned c
 
 #if !defined(CONFIG_ENV_EEPROM_IS_ON_I2C) && defined(CONFIG_SYS_I2C_EEPROM_ADDR)
 # define CONFIG_SYS_DEF_EEPROM_ADDR CONFIG_SYS_I2C_EEPROM_ADDR
-#endif
-
-#if defined(CONFIG_MPC8XX_SPI)
-extern void spi_init_f (void);
-extern void spi_init_r (void);
-extern ssize_t spi_read	 (uchar *, int, uchar *, int);
-extern ssize_t spi_write (uchar *, int, uchar *, int);
 #endif
 
 /* $(BOARD)/$(BOARD).c */
@@ -356,7 +358,6 @@ void	serial_putc_raw(const char);
 void	serial_puts   (const char *);
 int	serial_getc   (void);
 int	serial_tstc   (void);
-int	serial_setconfig(uint config);
 
 /* $(CPU)/speed.c */
 int	get_clocks (void);
@@ -541,26 +542,15 @@ int cpu_release(u32 nr, int argc, char * const argv[]);
 
 #else	/* __ASSEMBLY__ */
 
-/* Drop a C type modifier (like in 3UL) for constants used in assembly. */
-#define _AC(X, Y)       X
-
 #endif	/* __ASSEMBLY__ */
 
 /* Put only stuff here that the assembler can digest */
-
-/* Declare an unsigned long constant digestable both by C and an assembler. */
-#define UL(x)           _AC(x, UL)
 
 #ifdef CONFIG_POST
 #define CONFIG_HAS_POST
 #ifndef CONFIG_POST_ALT_LIST
 #define CONFIG_POST_STD_LIST
 #endif
-#endif
-
-#ifdef CONFIG_INIT_CRITICAL
-#error CONFIG_INIT_CRITICAL is deprecated!
-#error Read section CONFIG_SKIP_LOWLEVEL_INIT in README.
 #endif
 
 #define ROUND(a,b)		(((a) + (b) - 1) & ~((b) - 1))

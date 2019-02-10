@@ -182,6 +182,7 @@ config TARGET_DISPLAY5
 config TARGET_EMBESTMX6BOARDS
 	bool "embestmx6boards"
 	select BOARD_LATE_INIT
+	select SUPPORT_SPL
 
 config TARGET_GE_BX50V3
 	bool "General Electric Bx50v3"
@@ -262,7 +263,7 @@ config TARGET_MX6DL_MAMOJ
 	select SPL_PINCTRL if SPL
 	select SPL_SEPARATE_BSS if SPL
 	select SPL_SERIAL_SUPPORT if SPL
-	select SPL_USB_GADGET_SUPPORT if SPL
+	select SPL_USB_GADGET if SPL
 	select SPL_USB_HOST_SUPPORT if SPL
 	select SPL_USB_SDP_SUPPORT if SPL
 	select SPL_WATCHDOG_SUPPORT if SPL
@@ -428,6 +429,18 @@ config TARGET_PFLA02
 	select MX6QDL
 	select SUPPORT_SPL
 
+config TARGET_PCL063
+	bool "PHYTEC PCL063 (phyCORE-i.MX6UL)"
+	select MX6UL
+	select DM
+	select DM_ETH
+	select DM_GPIO
+	select DM_I2C
+	select DM_MMC
+	select DM_SERIAL
+	select DM_THERMAL
+	select SUPPORT_SPL
+
 config TARGET_SECOMX6
 	bool "secomx6 boards"
 
@@ -550,6 +563,7 @@ source "board/freescale/mx6ullevk/Kconfig"
 source "board/grinn/liteboard/Kconfig"
 source "board/phytec/pcm058/Kconfig"
 source "board/phytec/pfla02/Kconfig"
+source "board/phytec/pcl063/Kconfig"
 source "board/gateworks/gw_ventana/Kconfig"
 source "board/kosagi/novena/Kconfig"
 source "board/samtec/vining_2000/Kconfig"

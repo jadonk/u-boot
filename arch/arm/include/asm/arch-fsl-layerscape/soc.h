@@ -53,11 +53,36 @@ struct cpu_type {
 
 #define CPU_TYPE_ENTRY(n, v, nc) \
 	{ .name = #n, .soc_ver = SVR_##v, .num_cores = (nc)}
+
+#ifdef CONFIG_TFABOOT
+#define SMC_DRAM_BANK_INFO (0xC200FF12)
+#define SIP_SVC_RCW	0xC200FF18
+
+phys_size_t tfa_get_dram_size(void);
+
+enum boot_src {
+	BOOT_SOURCE_RESERVED = 0,
+	BOOT_SOURCE_IFC_NOR,
+	BOOT_SOURCE_IFC_NAND,
+	BOOT_SOURCE_QSPI_NOR,
+	BOOT_SOURCE_QSPI_NAND,
+	BOOT_SOURCE_XSPI_NOR,
+	BOOT_SOURCE_XSPI_NAND,
+	BOOT_SOURCE_SD_MMC,
+	BOOT_SOURCE_SD_MMC2,
+	BOOT_SOURCE_I2C1_EXTENDED,
+};
+
+enum boot_src get_boot_src(void);
+#endif
 #endif
 #define SVR_WO_E		0xFFFFFE
 #define SVR_LS1012A		0x870400
 #define SVR_LS1043A		0x879200
 #define SVR_LS1023A		0x879208
+/* LS1043A/LS1023A 23x23 package silicon has different value of VAR_PER */
+#define SVR_LS1043A_P23		0x879202
+#define SVR_LS1023A_P23		0x87920A
 #define SVR_LS1046A		0x870700
 #define SVR_LS1026A		0x870708
 #define SVR_LS1048A		0x870320
@@ -74,12 +99,18 @@ struct cpu_type {
 #define SVR_LS2044A		0x870930
 #define SVR_LS2081A		0x870918
 #define SVR_LS2041A		0x870914
+#define SVR_LX2160A		0x873601
+#define SVR_LX2120A		0x873621
+#define SVR_LX2080A		0x873603
 
 #define SVR_MAJ(svr)		(((svr) >> 4) & 0xf)
 #define SVR_MIN(svr)		(((svr) >> 0) & 0xf)
 #define SVR_REV(svr)		(((svr) >> 0) & 0xff)
 #define SVR_SOC_VER(svr)	(((svr) >> 8) & SVR_WO_E)
 #define IS_E_PROCESSOR(svr)	(!((svr >> 8) & 0x1))
+#ifdef CONFIG_ARCH_LX2160A
+#define IS_C_PROCESSOR(svr)	(!((svr >> 12) & 0x1))
+#endif
 #define IS_SVR_REV(svr, maj, min) \
 		((SVR_MAJ(svr) == (maj)) && (SVR_MIN(svr) == (min)))
 #define SVR_DEV(svr)		((svr) >> 8)

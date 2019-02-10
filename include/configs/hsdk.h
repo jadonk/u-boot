@@ -40,7 +40,6 @@
 /*
  * UART configuration
  */
-#define CONFIG_DW_SERIAL
 #define CONFIG_SYS_NS16550_SERIAL
 #define CONFIG_SYS_NS16550_CLK		33330000
 #define CONFIG_SYS_NS16550_MEM32
@@ -58,8 +57,6 @@
 /*
  * Environment settings
  */
-#define CONFIG_ENV_SIZE			SZ_16K
-
 #define CONFIG_EXTRA_ENV_SETTINGS \
 	"upgrade=if mmc rescan && " \
 		"fatload mmc 0:1 ${loadaddr} u-boot-update.scr && " \
@@ -115,11 +112,6 @@ setenv core_iccm_3 0x6; setenv core_dccm_3 0x6;\0"
  */
 #define CONFIG_BOOTFILE			"uImage"
 #define CONFIG_LOADADDR			CONFIG_SYS_LOAD_ADDR
-
-/*
- * Misc utility configuration
- */
-#define CONFIG_BOUNCE_BUFFER
 
 /* Cli configuration */
 #define CONFIG_SYS_CBSIZE		SZ_2K

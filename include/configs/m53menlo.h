@@ -110,7 +110,6 @@
  * RTC
  */
 #ifdef CONFIG_CMD_DATE
-#define CONFIG_RTC_M41T62
 #define CONFIG_SYS_I2C_RTC_ADDR		0x68
 #define CONFIG_SYS_M41T11_BASE_YEAR	2000
 #endif
@@ -158,6 +157,9 @@
 /* IIM Fuses */
 #define CONFIG_FSL_IIM
 
+/* Watchdog */
+#define CONFIG_WATCHDOG_TIMEOUT_MSECS 8000
+
 /*
  * Boot Linux
  */
@@ -203,7 +205,7 @@
 	"mtdparts=" CONFIG_MTDPARTS_DEFAULT "\0"			\
 	"netdev=eth0\0"							\
 	"splashsource=mmc_fs\0"						\
-	"splashfile=usplash.bmp.gz\0"					\
+	"splashfile=boot/usplash.bmp.gz\0"				\
 	"splashimage=0x88000000\0"					\
 	"splashpos=m,m\0"						\
 	"addcons="							\
@@ -213,7 +215,7 @@
 		"setenv bootargs ${bootargs} "				\
 		"ip=${ipaddr}:${serverip}:${gatewayip}:${netmask}"	\
 		":${hostname}:${netdev}:off\0"				\
-	"addmtd=setenv bootargs ${bootargs} mtdparts=${mtdparts}\0"	\
+	"addmtd=setenv bootargs ${bootargs} ${mtdparts}\0"		\
 	"addmisc="							\
 		"setenv bootargs ${bootargs} ${miscargs}\0"		\
 	"addargs=run addcons addmisc addmtd\0"				\

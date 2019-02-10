@@ -43,9 +43,6 @@ endif
 arch-dtbs:
 	$(Q)$(MAKE) $(build)=$(ARCH_PATH) dtbs
 
-.SECONDARY: $(obj)/dt.dtb.S $(obj)/dt-spl.dtb.S
-
-
 ifeq ($(CONFIG_SPL_BUILD),y)
 obj-$(CONFIG_OF_EMBED) := dt-spl.dtb.o
 # support "out-of-tree" build for dtb-spl
@@ -61,4 +58,4 @@ dtbs: $(obj)/dt.dtb $(obj)/dt-spl.dtb
 clean-files := dt.dtb.S dt-spl.dtb.S
 
 # Let clean descend into dts directories
-subdir- += ../arch/arm/dts ../arch/microblaze/dts ../arch/mips/dts ../arch/sandbox/dts ../arch/x86/dts ../arch/powerpc/dts
+subdir- += ../arch/arm/dts ../arch/microblaze/dts ../arch/mips/dts ../arch/sandbox/dts ../arch/x86/dts ../arch/powerpc/dts ../arch/riscv/dts
