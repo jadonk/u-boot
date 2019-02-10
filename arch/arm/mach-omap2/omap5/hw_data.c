@@ -418,8 +418,10 @@ void enable_basic_clocks(void)
 		(*prcm)->cm_l3init_hsmmc2_clkctrl,
 		(*prcm)->cm_l4per_gptimer2_clkctrl,
 		(*prcm)->cm_wkup_wdtimer2_clkctrl,
+		(*prcm)->cm_l4per_uart1_clkctrl,
 		(*prcm)->cm_l4per_uart3_clkctrl,
 		(*prcm)->cm_l4per_i2c1_clkctrl,
+		(*prcm)->cm_l4per_i2c4_clkctrl,
 #ifdef CONFIG_DRIVER_TI_CPSW
 		(*prcm)->cm_gmac_gmac_clkctrl,
 #endif
@@ -493,7 +495,6 @@ void enable_basic_uboot_clocks(void)
 		(*prcm)->cm_l4per_mcspi1_clkctrl,
 		(*prcm)->cm_l4per_i2c2_clkctrl,
 		(*prcm)->cm_l4per_i2c3_clkctrl,
-		(*prcm)->cm_l4per_i2c4_clkctrl,
 #if defined(CONFIG_DRA7XX)
 		(*prcm)->cm_ipu_i2c5_clkctrl,
 #else

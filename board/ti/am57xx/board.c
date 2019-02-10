@@ -30,6 +30,8 @@
 #include <dwc3-omap-uboot.h>
 #include <ti-usb-phy-uboot.h>
 #include <mmc.h>
+#include <dm/uclass.h>
+#include <i2c.h>
 
 #include "../common/board_detect.h"
 #include "mux_data.h"
@@ -46,6 +48,7 @@
 #define board_is_am574x_idk()	board_ti_is("AM574IDK")
 #define board_is_am572x_idk()	board_ti_is("AM572IDK")
 #define board_is_am571x_idk()	board_ti_is("AM571IDK")
+#define board_is_hamster()	board_ti_is("BBBBAI__") //no EEPROM...
 
 #ifdef CONFIG_DRIVER_TI_CPSW
 #include <cpsw.h>
@@ -75,12 +78,24 @@ DECLARE_GLOBAL_DATA_PTR;
 #define TPS65903X_PRIMARY_SECONDARY_PAD2	0xFB
 #define TPS65903X_PAD2_POWERHOLD_MASK		0x20
 
+#define CAPE_EEPROM_BUS_NUM 3
+#define CAPE_EEPROM_ADDR0 0x54
+#define CAPE_EEPROM_ADDR3 0x57
+
+#define CAPE_EEPROM_ADDR_LEN 0x10
+
 const struct omap_sysinfo sysinfo = {
 	"Board: UNKNOWN(BeagleBoard X15?) REV UNKNOWN\n"
 };
 
 static const struct dmm_lisa_map_regs beagle_x15_lisa_regs = {
 	.dmm_lisa_map_3 = 0x80740300,
+	.is_ma_present  = 0x1
+};
+
+static const struct dmm_lisa_map_regs hamster_lisa_regs = {
+	///FIXME: Document, where this magic number come from?
+	.dmm_lisa_map_3 = 0x80640100,
 	.is_ma_present  = 0x1
 };
 
@@ -101,6 +116,8 @@ void emif_get_dmm_regs(const struct dmm_lisa_map_regs **dmm_lisa_regs)
 		*dmm_lisa_regs = &am571x_idk_lisa_regs;
 	else if (board_is_am574x_idk())
 		*dmm_lisa_regs = &am574x_idk_lisa_regs;
+	else if (board_is_hamster())
+		*dmm_lisa_regs = &hamster_lisa_regs;
 	else
 		*dmm_lisa_regs = &beagle_x15_lisa_regs;
 }
@@ -502,8 +519,30 @@ void do_board_detect(void)
 
 	rc = ti_i2c_eeprom_am_get(CONFIG_EEPROM_BUS_ADDRESS,
 				  CONFIG_EEPROM_CHIP_ADDRESS);
-	if (rc)
+	if (rc)	{
 		printf("ti_i2c_eeprom_init failed %d\n", rc);
+		ti_i2c_eeprom_am_set("BBBBAI__", "A");
+	};
+
+	puts("in do_board_detect\n");
+	printf("do_board_detect\n");
+}
+
+void write_hex (unsigned char i)
+{
+	char cc;
+
+	cc = i >> 4;
+	cc &= 0xf;
+	if (cc > 9)
+		serial_putc (cc + 55);
+	else
+		serial_putc (cc + 48);
+	cc = i & 0xf;
+	if (cc > 9)
+		serial_putc (cc + 55);
+	else
+		serial_putc (cc + 48);
 }
 
 #else	/* CONFIG_SPL_BUILD */
@@ -521,6 +560,8 @@ void do_board_detect(void)
 
 	if (board_is_x15())
 		bname = "BeagleBoard X15";
+	else if (board_is_hamster())
+		bname = "AM57xx Hamster";
 	else if (board_is_am572x_evm())
 		bname = "AM572x EVM";
 	else if (board_is_am574x_idk())
@@ -533,6 +574,23 @@ void do_board_detect(void)
 	if (bname)
 		snprintf(sysinfo.board_string, SYSINFO_BOARD_NAME_MAX_LEN,
 			 "Board: %s REV %s\n", bname, board_ti_get_rev());
+}
+
+void write_hex (unsigned char i)
+{
+	char cc;
+
+	cc = i >> 4;
+	cc &= 0xf;
+	if (cc > 9)
+		serial_putc (cc + 55);
+	else
+		serial_putc (cc + 48);
+	cc = i & 0xf;
+	if (cc > 9)
+		serial_putc (cc + 55);
+	else
+		serial_putc (cc + 48);
 }
 
 static void setup_board_eeprom_env(void)
@@ -557,6 +615,8 @@ static void setup_board_eeprom_env(void)
 			name = "am57xx_evm_reva3";
 		else
 			name = "am57xx_evm";
+	} else if (board_is_hamster()) {
+		name = "am57xx_hamster";
 	} else if (board_is_am574x_idk()) {
 		name = "am574x_idk";
 	} else if (board_is_am572x_idk()) {
@@ -626,7 +686,7 @@ void am57x_idk_lcd_detect(void)
 	struct udevice *dev;
 
 	/* Only valid for IDKs */
-	if (board_is_x15() || board_is_am572x_evm())
+	if (board_is_x15() || board_is_am572x_evm() || board_is_hamster())
 		return;
 
 	/* Only AM571x IDK has gpio control detect.. so check that */
@@ -720,6 +780,28 @@ int board_late_init(void)
 
 	am57x_idk_lcd_detect();
 
+	///FIXME, too late!! But useful for testing function...
+	unsigned char addr;
+	struct udevice *dev;
+	int rc;
+
+	for ( addr = CAPE_EEPROM_ADDR0; addr <= CAPE_EEPROM_ADDR3; addr++ ) {
+		puts("BeagleBone: cape eeprom: i2c_probe: 0x");  write_hex(addr); puts(":\n");
+		rc = i2c_get_chip_for_busnum(CAPE_EEPROM_BUS_NUM, addr, 1, &dev);
+		if (rc) {
+			printf("failed to get device for EEPROM at address 0x%x\n",
+			       addr);
+//			goto out;
+		}
+//		out:
+	}
+
+	if (board_is_hamster()) {
+		env_set("console", "ttyO0,115200n8");
+	} else {
+		env_set("console", "ttyO2,115200n8");
+	}
+
 #if !defined(CONFIG_SPL_BUILD)
 	board_ti_set_ethaddr(2);
 #endif
@@ -762,6 +844,13 @@ void recalibrate_iodelay(void)
 		pconf_sz = ARRAY_SIZE(core_padconf_array_essential_am571x_idk);
 		iod = iodelay_cfg_array_am571x_idk;
 		iod_sz = ARRAY_SIZE(iodelay_cfg_array_am571x_idk);
+	} else if (board_is_hamster()) {
+		/* Common for X15/GPEVM */
+		pconf = core_padconf_array_essential_hamster;
+		pconf_sz = ARRAY_SIZE(core_padconf_array_essential_hamster);
+		/* Since full production should switch to SR2.0  */
+		iod = iodelay_cfg_array_hamster;
+		iod_sz = ARRAY_SIZE(iodelay_cfg_array_hamster);
 	} else {
 		/* Common for X15/GPEVM */
 		pconf = core_padconf_array_essential_x15;
@@ -863,11 +952,49 @@ const struct mmc_platform_fixups *platform_fixups_mmc(uint32_t addr)
 #endif
 
 #if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_OS_BOOT)
+
+//static int eeprom_has_been_read;
+//static struct id_eeprom eeprom;
+
+struct am335x_cape_eeprom_id {
+	unsigned int header;
+	char eeprom_rev[2];
+	char board_name[32];
+	char version[4];
+	char manufacture[16];
+	char part_number[16];
+	char number_of_pins[2];
+	char serial_number[12];
+	char pin_usage[140];
+	char vdd_3v3exp[ 2];
+	char vdd_5v[ 2];
+	char sys_5v[2];
+	char dc_supplied[2];
+};
+
 int spl_start_uboot(void)
 {
 	/* break into full u-boot on 'c' */
 	if (serial_tstc() && serial_getc() == 'c')
 		return 1;
+
+	//FIXME, i2c doesn't see to be up..
+	puts("spl_start_uboot\n");
+	unsigned char addr;
+	struct udevice *dev;
+	int rc;
+
+	for ( addr = CAPE_EEPROM_ADDR0; addr <= CAPE_EEPROM_ADDR3; addr++ ) {
+		puts("BeagleBone: cape eeprom: i2c_probe: 0x");  write_hex(addr); puts(":\n");
+		rc = i2c_get_chip_for_busnum(CAPE_EEPROM_BUS_NUM, addr, 1, &dev);
+		if (rc) {
+			printf("failed to get device for EEPROM at address 0x%x\n",
+			       addr);
+//			goto out;
+		}
+//		out:
+	}
+
 
 #ifdef CONFIG_SPL_ENV_SUPPORT
 	env_init();
@@ -1083,6 +1210,9 @@ int board_fit_config_name_match(const char *name)
 		}
 	} else if (board_is_am572x_evm() &&
 		   !strcmp(name, "am57xx-beagle-x15")) {
+		return 0;
+	} else if (board_is_hamster() &&
+		   !strcmp(name, "am57xx-hamster")) {
 		return 0;
 	} else if (board_is_am572x_idk() && !strcmp(name, "am572x-idk")) {
 		return 0;

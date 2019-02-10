@@ -64,32 +64,18 @@
 	"bootpart=0:2\0" \
 	"bootdir=/boot\0" \
 	"bootfile=zImage\0" \
+	"board_eeprom_header=undefined\0" \
 	"usbtty=cdc_acm\0" \
 	"vram=16M\0" \
 	AVB_VERIFY_CMD \
 	"partitions=" PARTS_DEFAULT "\0" \
 	"optargs=\0" \
 	"dofastboot=0\0" \
-	"emmc_linux_boot=" \
-		"echo Trying to boot Linux from eMMC ...; " \
-		"setenv mmcdev 1; " \
-		"setenv bootpart 1:2; " \
-		"setenv mmcroot /dev/mmcblk0p2 rw; " \
-		"run mmcboot;\0" \
-	"emmc_android_boot=" \
-		"echo Trying to boot Android from eMMC ...; " \
-		"run update_to_fit; " \
-		"setenv eval_bootargs setenv bootargs $bootargs; " \
-		"run eval_bootargs; " \
-		"setenv mmcdev 1; " \
-		"setenv machid fe6; " \
-		"mmc dev $mmcdev; " \
-		"mmc rescan; " \
-		AVB_VERIFY_CHECK \
-		"part start mmc ${mmcdev} boot boot_start; " \
-		"part size mmc ${mmcdev} boot boot_size; " \
-		"mmc read ${loadaddr} ${boot_start} ${boot_size}; " \
-		"bootm ${loadaddr}#${fdtfile};\0 "
+	"read_board_eeprom="\
+		"if test $board_eeprom_header = beagle_x15_revb1_blank; then " \
+			"run eeprom_dump; run eeprom_x15_b1; reset; fi; " \
+		"if test $board_eeprom_header = beagle_x15_revc_blank; then " \
+			"run eeprom_dump; run eeprom_x15_c; reset; fi;  \0 "
 
 #ifdef CONFIG_OMAP54XX
 
@@ -127,20 +113,17 @@
 			"echo WARNING: Could not determine device tree to use; fi; \0"
 
 #define CONFIG_BOOTCOMMAND \
-	"if test ${dofastboot} -eq 1; then " \
-		"echo Boot fastboot requested, resetting dofastboot ...;" \
-		"setenv dofastboot 0; saveenv;" \
-		"echo Booting into fastboot ...; " \
-		"fastboot " __stringify(CONFIG_FASTBOOT_USB_DEV) "; " \
-	"fi;" \
-	"if test ${boot_fit} -eq 1; then "	\
-		"run update_to_fit;"	\
-	"fi;"	\
+	"run read_board_eeprom; " \
 	"run findfdt; " \
-	"run envboot; " \
-	"run mmcboot;" \
-	"run emmc_linux_boot; " \
-	"run emmc_android_boot; " \
+	"setenv mmcdev 0; " \
+	"setenv devtype usb; " \
+	"echo usb_boot is currently disabled;" \
+	"setenv devtype scsi; " \
+	"echo scsi_boot is currently disabled;" \
+	"setenv devtype mmc; " \
+	"run mmc_boot;" \
+	"setenv mmcdev 1; " \
+	"run mmc_boot;" \
 	""
 
 #endif /* CONFIG_OMAP54XX */
