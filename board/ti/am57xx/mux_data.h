@@ -1313,6 +1313,17 @@ const struct pad_conf_entry early_padconf[] = {
 	{UART2_RTSN, (M1 | PIN_INPUT_SLEW)},	/* uart2_rtsn.uart3_txd */
 	{I2C1_SDA, (PIN_INPUT_PULLUP | M0)},	/* I2C1_SDA */
 	{I2C1_SCL, (PIN_INPUT_PULLUP | M0)},	/* I2C1_SCL */
+
+	/* BeagleBone AI: Debug UART */
+	{UART1_RXD, (M0 | PIN_INPUT_SLEW)},	/* UART1_RXD */
+	{UART1_TXD, (M0 | PIN_INPUT_SLEW)},	/* UART1_TXD */
+
+	/* Cape Bus i2c */
+	{GPMC_A0, (M7 | PIN_INPUT_PULLUP)},	/* R6_GPIO7_3: gpmc_a0.i2c4_scl (Shared with F4_UART10_RTSN) */
+	{GPMC_A1, (M7 | PIN_INPUT_PULLUP)},	/* T9_GPIO7_4: gpmc_a1.i2c4_sda (Shared with D2_UART10_CTSN) */
+	/* Cape Bus i2c (gpio shared) */
+	{VIN2A_D4, (M15 | PIN_INPUT)},	/* D2_UART10_CTSN: vin2a_d4.uart10_ctsn (Shared with T9_GPIO7_4) */
+	{VIN2A_D5, (M15 | PIN_INPUT)},	/* F4_UART10_RTSN: vin2a_d5.uart10_rtsn (Shared with R6_GPIO7_3) */
 };
 
 #ifdef CONFIG_SUPPORT_EMMC_BOOT
