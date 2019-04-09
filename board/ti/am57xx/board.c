@@ -32,6 +32,7 @@
 #include <ti-usb-phy-uboot.h>
 #include <mmc.h>
 #include <dm/uclass.h>
+#include <i2c.h>
 
 #include "../common/board_detect.h"
 #include "mux_data.h"
@@ -81,6 +82,12 @@ DECLARE_GLOBAL_DATA_PTR;
 
 #define TPS65903X_PRIMARY_SECONDARY_PAD2	0xFB
 #define TPS65903X_PAD2_POWERHOLD_MASK		0x20
+
+#define CAPE_EEPROM_BUS_NUM 3
+#define CAPE_EEPROM_ADDR0 0x54
+#define CAPE_EEPROM_ADDR3 0x57
+
+#define CAPE_EEPROM_ADDR_LEN 0x10
 
 const struct omap_sysinfo sysinfo = {
 	"Board: UNKNOWN(BeagleBoard X15?) REV UNKNOWN\n"
@@ -759,6 +766,27 @@ int board_late_init(void)
 	uclass_get_device(UCLASS_CLK, 0, &dev);
 
 	if (board_is_bbai()) {
+		unsigned char addr;
+		struct udevice *dev;
+		int rc;
+
+		for (addr = CAPE_EEPROM_ADDR0; addr <= CAPE_EEPROM_ADDR3; addr++) {
+			printf("BeagleBone: cape eeprom: i2c_probe: 0x%x\n", addr);
+
+			rc = i2c_get_chip_for_busnum(0, addr, 1, &dev);
+			if (rc) {
+				pr_err("Checking (ret 1 bus works) I2C1 bus. ret %d\n", rc);
+			} else {
+				pr_err("Found device at address 0x%x\n", addr);
+			}
+			rc = i2c_get_chip_for_busnum(3, addr, 1, &dev);
+			if (rc) {
+				pr_err("Checking (ret 1 bus works) I2C4 bus. ret %d\n", rc);
+			} else {
+				pr_err("Found device at address 0x%x\n", addr);
+			}
+		}
+
 		env_set("console", "ttyS0,115200n8");
 	} else {
 		env_set("console", "ttyO2,115200n8");
@@ -921,11 +949,52 @@ const struct mmc_platform_fixups *platform_fixups_mmc(uint32_t addr)
 #endif
 
 #if defined(CONFIG_SPL_BUILD) && defined(CONFIG_SPL_OS_BOOT)
+
+struct am335x_cape_eeprom_id {
+	unsigned int header;
+	char eeprom_rev[2];
+	char board_name[32];
+	char version[4];
+	char manufacture[16];
+	char part_number[16];
+	char number_of_pins[2];
+	char serial_number[12];
+	char pin_usage[140];
+	char vdd_3v3exp[2];
+	char vdd_5v[2];
+	char sys_5v[2];
+	char dc_supplied[2];
+};
+
 int spl_start_uboot(void)
 {
 	/* break into full u-boot on 'c' */
 	if (serial_tstc() && serial_getc() == 'c')
 		return 1;
+
+	if (board_is_bbai()) {
+		unsigned char addr;
+		struct udevice *dev;
+		int rc;
+
+		for (addr = CAPE_EEPROM_ADDR0; addr <= CAPE_EEPROM_ADDR3; addr++) {
+			printf("BeagleBone: cape eeprom: i2c_probe: 0x%x\n", addr);
+
+			rc = i2c_get_chip_for_busnum(0, addr, 1, &dev);
+			if (rc) {
+				pr_err("Checking (ret 1 bus works) I2C1 bus. ret %d\n", rc);
+			} else {
+				pr_err("Found device at address 0x%x\n", addr);
+			}
+			rc = i2c_get_chip_for_busnum(3, addr, 1, &dev);
+			if (rc) {
+				pr_err("Checking (ret 1 bus works) I2C4 bus. ret %d\n", rc);
+			} else {
+				pr_err("Found device at address 0x%x\n", addr);
+			}
+		}
+	}
+
 
 #ifdef CONFIG_SPL_ENV_SUPPORT
 	env_init();
@@ -1139,9 +1208,13 @@ int board_fit_config_name_match(const char *name)
 		} else if (!strcmp(name, "am57xx-beagle-x15")) {
 			return 0;
 		}
-	} else if (board_is_am572x_evm() &&
-		   !strcmp(name, "am57xx-beagle-x15")) {
-		return 0;
+	} else if (board_is_am572x_evm()) {
+		if (board_is_am572x_evm_reva3()) {
+			if (!strcmp(name, "am57xx-evm-reva3"))
+			 return 0;
+		} else if (!strcmp(name, "am57xx-beagle-x15")) {
+			return 0;
+		}
 	} else if (board_is_am572x_idk() && !strcmp(name, "am572x-idk")) {
 		return 0;
 	} else if (board_is_am574x_idk() && !strcmp(name, "am574x-idk")) {
