@@ -108,6 +108,7 @@
 	"bootpart=0:2\0" \
 	"bootdir=/boot\0" \
 	"bootfile=zImage\0" \
+	"board_eeprom_header=undefined\0" \
 	"usbtty=cdc_acm\0" \
 	"vram=16M\0" \
 	AVB_VERIFY_CMD \
@@ -161,7 +162,12 @@
 			"bootm ${loadaddr}#${fdtfile}; " \
 		"else " \
 			"echo boot${slot_suffix} partition not found; " \
-		"fi;\0"
+		"fi;\0" \
+	"read_board_eeprom=" \
+		"if test $board_eeprom_header = beagle_x15_revb1_blank; then " \
+			"run eeprom_dump; run eeprom_x15_b1; reset; fi; " \
+		"if test $board_eeprom_header = beagle_x15_revc_blank; then " \
+			"run eeprom_dump; run eeprom_x15_c; reset; fi;  \0 "
 
 #ifdef CONFIG_OMAP54XX
 
@@ -192,9 +198,11 @@
 		"if test $board_name = am57xx_evm; then " \
 			"setenv fdtfile am57xx-beagle-x15.dtb; fi;" \
 		"if test $board_name = am57xx_evm_reva3; then " \
-			"setenv fdtfile am57xx-beagle-x15.dtb; fi;" \
+			"setenv fdtfile am57xx-evm-reva3.dtb; fi;" \
 		"if test $board_name = am571x_idk; then " \
 			"setenv fdtfile am571x-idk.dtb; fi;" \
+		"if test $board_name = am5729_beagleboneai; then " \
+			"setenv fdtfile am5729-beagleboneai.dtb; fi;" \
 		"if test $fdtfile = undefined; then " \
 			"echo WARNING: Could not determine device tree to use; fi; \0"
 
@@ -207,11 +215,17 @@
 	"if test ${boot_fit} -eq 1; then "	\
 		"run update_to_fit;"	\
 	"fi;"	\
+	"run read_board_eeprom; " \
 	"run findfdt; " \
-	"run envboot; " \
-	"run mmcboot;" \
-	"run emmc_linux_boot; " \
-	"run emmc_android_boot; " \
+	"setenv mmcdev 0; " \
+	"setenv devtype usb; " \
+	"echo usb_boot is currently disabled;" \
+	"setenv devtype scsi; " \
+	"echo scsi_boot is currently disabled;" \
+	"setenv devtype mmc; " \
+	"run mmc_boot;" \
+	"setenv mmcdev 1; " \
+	"run mmc_boot;" \
 	""
 
 #endif /* CONFIG_OMAP54XX */
