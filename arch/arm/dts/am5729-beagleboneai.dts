@@ -229,6 +229,7 @@
 				<&gpio3 18 GPIO_ACTIVE_LOW>;   // WL-REG-ON
 	};
 
+#if 0
 	unused_pins: unused_pins {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
@@ -240,6 +241,7 @@
 		pinctrl-names = "default";
 		pinctrl-0 = <&cape_pins_default>;
 	};
+#endif
 
 	extcon_usb1: extcon_usb1 {
 		compatible = "linux,extcon-usb-gpio";
