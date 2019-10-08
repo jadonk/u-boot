@@ -13,6 +13,8 @@
 #include <dm/uclass.h>
 #include <env.h>
 #include <i2c.h>
+#include <mmc.h>
+#include <errno.h>
 
 #include "board_detect.h"
 
@@ -215,6 +217,7 @@ int __maybe_unused ti_i2c_eeprom_am_get(int bus_addr, int dev_addr)
 
 	rc = ti_i2c_eeprom_get(bus_addr, dev_addr, TI_EEPROM_HEADER_MAGIC,
 			       sizeof(am_ep), (uint8_t *)&am_ep);
+
 	if (rc)
 		return rc;
 
@@ -236,6 +239,59 @@ int __maybe_unused ti_i2c_eeprom_am_get(int bus_addr, int dev_addr)
 
 	memcpy(ep->mac_addr, am_ep.mac_addr,
 	       TI_EEPROM_HDR_NO_OF_MAC_ADDR * TI_EEPROM_HDR_ETH_ALEN);
+
+	return 0;
+}
+
+int __maybe_unused ti_emmc_boardid_bbai_get(void)
+{
+	int rc;
+	struct udevice *dev;
+	struct mmc *mmc;
+	struct ti_common_eeprom *ep;
+	struct ti_bbai_boardid brdid;
+	volatile uint32_t * CTRL_CORE_BOOTSTRAP = (uint32_t *) 0x4A0026C4;
+
+	ep = TI_EEPROM_DATA;
+	if (ep->header == TI_EEPROM_HEADER_MAGIC)
+		return 0; /* EEPROM has already been read */
+
+	/* Initialize with a known bad marker for emmc fails.. */
+	ep->header = TI_DEAD_EEPROM_MAGIC;
+	ep->name[0] = 0x0;
+	ep->version[0] = 0x0;
+	ep->serial[0] = 0x0;
+	ep->config[0] = 0x0;
+
+	/* Test CTRL_CORE_BOOTSTRAP register to determine if the boot
+           mode is the same as BeagleBone AI: MODE=2 (USB/SD/eMMC) */
+	if ((*CTRL_CORE_BOOTSTRAP & 0x1F) != 2)
+		return -EIO;
+
+	/* Set device to 1: /dev/mmcblk1 */
+	rc = uclass_get_device(UCLASS_MMC, 1, &dev);
+	if (rc)
+		return rc;
+	mmc = mmc_get_mmc_dev(dev);
+	if (!mmc)
+		return -ENODEV;
+
+	/* Set partition to 2: /dev/mmcblk1boot1 */
+	rc = mmc_switch_part(mmc, 2);
+	if (rc)
+		return rc;
+
+	rc = mmc_read(mmc, 0L, (uchar *) &brdid, sizeof(brdid));
+	if (rc)
+		return rc;
+
+	ep->header = brdid.header;
+	strlcpy(ep->name, brdid.name, TI_EEPROM_HDR_NAME_LEN + 1);
+	ti_eeprom_string_cleanup(ep->name);
+	strlcpy(ep->version, brdid.version, TI_EEPROM_HDR_REV_LEN + 1);
+	ti_eeprom_string_cleanup(ep->version);
+	strlcpy(ep->serial, brdid.serial, TI_EEPROM_BBAI_HDR_SERIAL_LEN + 1);
+	ti_eeprom_string_cleanup(ep->serial);
 
 	return 0;
 }
