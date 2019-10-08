@@ -12,6 +12,7 @@
 #include <palmas.h>
 #include <sata.h>
 #include <usb.h>
+#include <errno.h>
 #include <asm/omap_common.h>
 #include <asm/omap_sec_common.h>
 #include <asm/emif.h>
@@ -34,6 +35,10 @@
 
 #include "../common/board_detect.h"
 #include "mux_data.h"
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+static int board_bootmode_has_emmc(void);
+#endif
 
 #define board_is_x15()		board_ti_is("BBRDX15_")
 #define board_is_x15_revb1()	(board_ti_is("BBRDX15_") && \
@@ -513,6 +518,14 @@ void do_board_detect(void)
 				  CONFIG_EEPROM_CHIP_ADDRESS);
 	if (rc)
 		printf("ti_i2c_eeprom_init failed %d\n", rc);
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+	rc = board_bootmode_has_emmc();
+	if (!rc)
+		rc = ti_emmc_boardid_get();
+	if (rc)
+		printf("ti_emmc_boardid_get failed %d\n", rc);
+#endif
 }
 
 #else	/* CONFIG_SPL_BUILD */
@@ -527,6 +540,14 @@ void do_board_detect(void)
 				  CONFIG_EEPROM_CHIP_ADDRESS);
 	if (rc)
 		printf("ti_i2c_eeprom_init failed %d\n", rc);
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+	rc = board_bootmode_has_emmc();
+	if (!rc)
+		rc = ti_emmc_boardid_get();
+	if (rc)
+		printf("ti_emmc_boardid_get failed %d\n", rc);
+#endif
 
 	if (board_is_x15())
 		bname = "BeagleBoard X15";
@@ -760,6 +781,15 @@ void set_muxconf_regs(void)
 {
 	do_set_mux32((*ctrl)->control_padconf_core_base,
 		     early_padconf, ARRAY_SIZE(early_padconf));
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+	int rc;
+
+	rc = board_bootmode_has_emmc();
+	if (!rc)
+		do_set_mux32((*ctrl)->control_padconf_core_base,
+			     emmc_padconf, ARRAY_SIZE(emmc_padconf));
+#endif
 }
 
 #ifdef CONFIG_IODELAY_RECALIBRATION
@@ -1148,4 +1178,18 @@ void board_tee_image_process(ulong tee_image, size_t tee_size)
 }
 
 U_BOOT_FIT_LOADABLE_HANDLER(IH_TYPE_TEE, board_tee_image_process);
+#endif
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+static int board_bootmode_has_emmc(void)
+{
+	volatile uint32_t *CTRL_CORE_BOOTSTRAP = (uint32_t *)0x4A0026C4;
+
+	/* Test CTRL_CORE_BOOTSTRAP register to determine if the boot
+	   mode is the same as BeagleBone AI: MODE=2 (USB/SD/eMMC) */
+	if ((*CTRL_CORE_BOOTSTRAP & 0x1F) != 2)
+		return -EIO;
+
+	return 0;
+}
 #endif
