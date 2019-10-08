@@ -512,6 +512,13 @@ void do_board_detect(void)
 				  CONFIG_EEPROM_CHIP_ADDRESS);
 	if (rc)
 		printf("ti_i2c_eeprom_init failed %d\n", rc);
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+	rc = ti_emmc_boardid_bbai_get();
+
+	if (rc)
+		printf("ti_emmc_boardid_bbai_get failed %d\n", rc);
+#endif
 }
 
 #else	/* CONFIG_SPL_BUILD */
@@ -526,6 +533,13 @@ void do_board_detect(void)
 				  CONFIG_EEPROM_CHIP_ADDRESS);
 	if (rc)
 		printf("ti_i2c_eeprom_init failed %d\n", rc);
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+	rc = ti_emmc_boardid_bbai_get();
+
+	if (rc)
+		printf("ti_emmc_boardid_bbai_get failed %d\n", rc);
+#endif
 
 	if (board_is_x15())
 		bname = "BeagleBoard X15";
