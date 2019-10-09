@@ -10,7 +10,7 @@
 #define __TI_BOOT_H
 
 #ifndef CONSOLEDEV
-#define CONSOLEDEV "ttyS2"
+#define CONSOLEDEV "ttyS0"
 #endif
 
 #define VBMETA_PART_SIZE		(64 * 1024)
@@ -195,6 +195,8 @@
 			"setenv fdtfile am57xx-beagle-x15.dtb; fi;" \
 		"if test $board_name = am571x_idk; then " \
 			"setenv fdtfile am571x-idk.dtb; fi;" \
+		"if test $board_name = am5729_beagleboneai; then " \
+			"setenv fdtfile am5729-beagleboneai.dtb; fi;" \
 		"if test $fdtfile = undefined; then " \
 			"echo WARNING: Could not determine device tree to use; fi; \0"
 
