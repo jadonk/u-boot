@@ -60,9 +60,9 @@
 	};
 
 	src_clk_osc4: src_clk_osc4 {
-        	#clock-cells = <0>;
-        	compatible = "fixed-clock";
-        	clock-frequency = <24000000>;
+		#clock-cells = <0>;
+		compatible = "fixed-clock";
+		clock-frequency = <24000000>;
     	};
 
 	leds {
@@ -470,7 +470,7 @@
 				trip = <&board_alert0>;
 			};
 		};
-       };
+	};
 };
 
 &mailbox5 {
