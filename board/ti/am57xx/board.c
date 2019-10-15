@@ -46,7 +46,7 @@
 #define board_is_am574x_idk()	board_ti_is("AM574IDK")
 #define board_is_am572x_idk()	board_ti_is("AM572IDK")
 #define board_is_am571x_idk()	board_ti_is("AM571IDK")
-#define board_is_bbai()		board_ti_is("BBONE-AI")
+#define board_is_bbai()		1
 
 #ifdef CONFIG_DRIVER_TI_CPSW
 #include <cpsw.h>
