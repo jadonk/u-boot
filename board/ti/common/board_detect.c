@@ -14,7 +14,6 @@
 #include <env.h>
 #include <i2c.h>
 #include <mmc.h>
-#include <errno.h>
 
 #include "board_detect.h"
 
@@ -243,14 +242,13 @@ int __maybe_unused ti_i2c_eeprom_am_get(int bus_addr, int dev_addr)
 	return 0;
 }
 
-int __maybe_unused ti_emmc_boardid_bbai_get(void)
+int __maybe_unused ti_emmc_boardid_get(void)
 {
 	int rc;
 	struct udevice *dev;
 	struct mmc *mmc;
 	struct ti_common_eeprom *ep;
-	struct ti_bbai_boardid brdid;
-	volatile uint32_t * CTRL_CORE_BOOTSTRAP = (uint32_t *) 0x4A0026C4;
+	struct ti_emmc_boardid brdid;
 
 	ep = TI_EEPROM_DATA;
 	if (ep->header == TI_EEPROM_HEADER_MAGIC)
@@ -262,11 +260,6 @@ int __maybe_unused ti_emmc_boardid_bbai_get(void)
 	ep->version[0] = 0x0;
 	ep->serial[0] = 0x0;
 	ep->config[0] = 0x0;
-
-	/* Test CTRL_CORE_BOOTSTRAP register to determine if the boot
-           mode is the same as BeagleBone AI: MODE=2 (USB/SD/eMMC) */
-	if ((*CTRL_CORE_BOOTSTRAP & 0x1F) != 2)
-		return -EIO;
 
 	/* Set device to 1: /dev/mmcblk1 */
 	rc = uclass_get_device(UCLASS_MMC, 1, &dev);
@@ -286,11 +279,11 @@ int __maybe_unused ti_emmc_boardid_bbai_get(void)
 		return rc;
 
 	ep->header = brdid.header;
-	strlcpy(ep->name, brdid.name, TI_EEPROM_HDR_NAME_LEN + 1);
+	strlcpy(ep->name, brdid.name, TI_EMMC_HDR_NAME_LEN + 1);
 	ti_eeprom_string_cleanup(ep->name);
-	strlcpy(ep->version, brdid.version, TI_EEPROM_HDR_REV_LEN + 1);
+	strlcpy(ep->version, brdid.version, TI_EMMC_HDR_REV_LEN + 1);
 	ti_eeprom_string_cleanup(ep->version);
-	strlcpy(ep->serial, brdid.serial, TI_EEPROM_BBAI_HDR_SERIAL_LEN + 1);
+	strlcpy(ep->serial, brdid.serial, TI_EMMC_HDR_SERIAL_LEN + 1);
 	ti_eeprom_string_cleanup(ep->serial);
 
 	return 0;

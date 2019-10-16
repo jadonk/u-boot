@@ -328,8 +328,8 @@ const struct pad_conf_entry core_padconf_array_essential_bbai[] = {
 	{VIN2A_D3, (M8 | PIN_OUTPUT)},	/* vin2a_d3.uart10_txd */
 
 	/* Cape Bus i2c (gpio shared) */
-	{VIN2A_D4, (M15 | PIN_INPUT)},			/* D2_UART10_CTSN: vin2a_d4.uart10_ctsn (Shared with T9_GPIO7_4) */
-	{VIN2A_D5, (M15 | PIN_INPUT)},			/* F4_UART10_RTSN: vin2a_d5.uart10_rtsn (Shared with R6_GPIO7_3) */
+	{VIN2A_D4, (M14 | PIN_INPUT)},			/* D2_UART10_CTSN: vin2a_d4. (Shared with T9_GPIO7_4) */
+	{VIN2A_D5, (M14 | PIN_INPUT)},			/* F4_UART10_RTSN: vin2a_d5. (Shared with R6_GPIO7_3) */
 
 	{VIN2A_D6, (M14 | PIN_INPUT_PULLDOWN)},	/* vin2a_d6.gpio4_7 */
 	{VIN2A_D7, (M14 | PIN_INPUT_PULLDOWN)},	/* vin2a_d7.gpio4_8 */
@@ -1269,6 +1269,20 @@ const struct pad_conf_entry early_padconf[] = {
 	{UART2_RTSN, (M1 | PIN_INPUT_SLEW)},	/* uart2_rtsn.uart3_txd */
 	{I2C1_SDA, (PIN_INPUT_PULLUP | M0)},	/* I2C1_SDA */
 	{I2C1_SCL, (PIN_INPUT_PULLUP | M0)},	/* I2C1_SCL */
+};
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+const struct pad_conf_entry emmc_padconf[] = {
+	{GPMC_A19, (M1 | PIN_INPUT_PULLUP)},			/*  K7: gpmc_a19.mmc2_dat4 */
+	{GPMC_A20, (M1 | PIN_INPUT_PULLUP)},			/*  M7: gpmc_a20.mmc2_dat5 */
+	{GPMC_A21, (M1 | PIN_INPUT_PULLUP)},			/*  J5: gpmc_a21.mmc2_dat6 */
+	{GPMC_A22, (M1 | PIN_INPUT_PULLUP)},			/*  K6: gpmc_a22.mmc2_dat7 */
+	{GPMC_A23, (M1 | PIN_INPUT_PULLUP)},			/*  J7: gpmc_a23.mmc2_clk */
+	{GPMC_A24, (M1 | PIN_INPUT_PULLUP)},			/*  J4: gpmc_a24.mmc2_dat0 */
+	{GPMC_A25, (M1 | PIN_INPUT_PULLUP)},			/*  J6: gpmc_a25.mmc2_dat1 */
+	{GPMC_A26, (M1 | PIN_INPUT_PULLUP)},			/*  H4: gpmc_a26.mmc2_dat2 */
+	{GPMC_A27, (M1 | PIN_INPUT_PULLUP)},			/*  H5: gpmc_a27.mmc2_dat3 */
+	{GPMC_CS1, (M1 | PIN_INPUT_PULLUP)},			/*  H6: gpmc_cs1.mmc2_cmd */
 
 	/* BeagleBone AI: Debug UART */
 	{UART1_RXD, (M0 | PIN_INPUT_SLEW)},	/* UART1_RXD */
@@ -1278,9 +1292,10 @@ const struct pad_conf_entry early_padconf[] = {
 	{GPMC_A0, (M7 | PIN_INPUT_PULLUP)},	/* R6_GPIO7_3: gpmc_a0.i2c4_scl (Shared with F4_UART10_RTSN) */
 	{GPMC_A1, (M7 | PIN_INPUT_PULLUP)},	/* T9_GPIO7_4: gpmc_a1.i2c4_sda (Shared with D2_UART10_CTSN) */
 	/* Cape Bus i2c (gpio shared) */
-	{VIN2A_D4, (M15 | PIN_INPUT)},	/* D2_UART10_CTSN: vin2a_d4.uart10_ctsn (Shared with T9_GPIO7_4) */
-	{VIN2A_D5, (M15 | PIN_INPUT)},	/* F4_UART10_RTSN: vin2a_d5.uart10_rtsn (Shared with R6_GPIO7_3) */
+	{VIN2A_D4, (M14 | PIN_INPUT)},	/* D2_UART10_CTSN: vin2a_d4. (Shared with T9_GPIO7_4) */
+	{VIN2A_D5, (M14 | PIN_INPUT)},	/* F4_UART10_RTSN: vin2a_d5. (Shared with R6_GPIO7_3) */
 };
+#endif
 
 #ifdef CONFIG_IODELAY_RECALIBRATION
 const struct iodelay_cfg_entry iodelay_cfg_array_x15_sr1_1[] = {

@@ -19,7 +19,9 @@
 #define TI_EEPROM_HDR_NO_OF_MAC_ADDR	3
 #define TI_EEPROM_HDR_ETH_ALEN		6
 
-#define TI_EEPROM_BBAI_HDR_SERIAL_LEN	14
+#define TI_EMMC_HDR_NAME_LEN	TI_EEPROM_HDR_NAME_LEN
+#define TI_EMMC_HDR_REV_LEN	TI_EEPROM_HDR_REV_LEN
+#define TI_EMMC_HDR_SERIAL_LEN	14
 
 /**
  * struct ti_am_eeprom - This structure holds data read in from the
@@ -46,8 +48,8 @@ struct ti_am_eeprom {
 } __attribute__ ((__packed__));
 
 /**
- * struct ti_bbai_boardid - This structure holds data read in from the
- *                     AM57xx BeagleBone AI eMMC-held board id.
+ * struct ti_emmc_boardid - This structure holds data read in from the
+ *                     eMMC-held board id.
  * @header: This holds the magic number
  * @name: The name of the board
  * @version: Board revision
@@ -58,11 +60,11 @@ struct ti_am_eeprom {
  * to configure specific TI boards. This allows booting of multiple
  * TI boards with a single MLO and u-boot.
  */
-struct ti_bbai_boardid {
+struct ti_emmc_boardid {
 	unsigned int header;
-	char name[TI_EEPROM_HDR_NAME_LEN];
-	char version[TI_EEPROM_HDR_REV_LEN];
-	char serial[TI_EEPROM_BBAI_HDR_SERIAL_LEN];
+	char name[TI_EMMC_HDR_NAME_LEN];
+	char version[TI_EMMC_HDR_REV_LEN];
+	char serial[TI_EMMC_HDR_SERIAL_LEN];
 } __attribute__ ((__packed__));
 
 /* AM6x TI EVM EEPROM Definitions */
@@ -238,7 +240,7 @@ struct ti_common_eeprom {
 	u32 header;
 	char name[TI_EEPROM_HDR_NAME_LEN + 1];
 	char version[TI_EEPROM_HDR_REV_LEN + 1];
-	char serial[TI_EEPROM_BBAI_HDR_SERIAL_LEN + 1];
+	char serial[TI_EMMC_HDR_SERIAL_LEN + 1];
 	char config[TI_EEPROM_HDR_CONFIG_LEN + 1];
 	char mac_addr[TI_EEPROM_HDR_NO_OF_MAC_ADDR][TI_EEPROM_HDR_ETH_ALEN];
 	u64 emif1_size;
@@ -290,13 +292,13 @@ struct ti_am6_eeprom {
 int ti_i2c_eeprom_am_get(int bus_addr, int dev_addr);
 
 /**
- * ti_emmc_boardid_bbai_get() - Fetch board ID information from eMMC
+ * ti_emmc_boardid_get() - Fetch board ID information from eMMC
  *
  * ep in SRAM is populated by the this function that is currently
  * based on BeagleBone AI, but could be made more general across AM*
  * platforms.
  */
-int __maybe_unused ti_emmc_boardid_bbai_get(void);
+int __maybe_unused ti_emmc_boardid_get(void);
 
 /**
  * ti_i2c_eeprom_dra7_get() - Consolidated eeprom data for DRA7 TI EVMs
