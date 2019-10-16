@@ -261,6 +261,10 @@ int __maybe_unused ti_emmc_boardid_get(void)
 	ep->serial[0] = 0x0;
 	ep->config[0] = 0x0;
 
+	rc = mmc_initialize(NULL);
+	if (rc)
+		return rc;
+
 	/* Set device to 1: /dev/mmcblk1 */
 	rc = uclass_get_device(UCLASS_MMC, 1, &dev);
 	if (rc)
