@@ -444,7 +444,7 @@ int mmc_read(struct mmc *mmc, u64 src, uchar *dst, int size)
 
 		err = mmc_read_blocks(mmc, buffer, i, 1);
 
-		if (err)
+		if (err != 1)
 			goto free_buffer;
 
 		/*
@@ -456,7 +456,7 @@ int mmc_read(struct mmc *mmc, u64 src, uchar *dst, int size)
 		if (segment_size < size)
 			segment_size = size;
 
-		memcpy(dst, buffer + offset, segment_size);
+		memcpy(dst, buffer + offset, size);
 
 		dst += segment_size;
 		src += segment_size;
