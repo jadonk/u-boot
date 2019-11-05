@@ -1327,6 +1327,7 @@ const struct pad_conf_entry emmc_padconf[] = {
 	{GPMC_A26, (M1 | PIN_INPUT_PULLUP)},			/*  H4: gpmc_a26.mmc2_dat2 */
 	{GPMC_A27, (M1 | PIN_INPUT_PULLUP)},			/*  H5: gpmc_a27.mmc2_dat3 */
 	{GPMC_CS1, (M1 | PIN_INPUT_PULLUP)},			/*  H6: gpmc_cs1.mmc2_cmd */
+	{MCASP1_AXR5, (M14 | PIN_OUTPUT_PULLUP)},		/* F13: eMMC_RSTn (missing on schematic): mcasp1_axr5.gpio5_7 */
 
 	/* BeagleBone AI: Debug UART */
 	{UART1_RXD, (M0 | PIN_INPUT_SLEW)},	/* UART1_RXD */
