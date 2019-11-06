@@ -523,7 +523,7 @@ void do_board_detect(void)
 
 	rc = ti_i2c_eeprom_am_get(CONFIG_EEPROM_BUS_ADDRESS,
 				  CONFIG_EEPROM_CHIP_ADDRESS);
-	if (rc)	{
+	if (rc)
 		printf("ti_i2c_eeprom_init failed %d\n", rc);
 
 #ifdef CONFIG_SUPPORT_EMMC_BOOT
@@ -957,41 +957,9 @@ int spl_start_uboot(void)
 		return 1;
 
 	if (board_is_bbai()) {
-		//FIXME, i2c doesn't see to be up..
-		puts("spl_start_uboot\n");
 		unsigned char addr;
 		struct udevice *dev;
 		int rc;
-
-		printf("CTRL_CORE_PAD_I2C1_SDA:    0x%08x\n", readl(0x4A003800));
-		printf("CTRL_CORE_PAD_I2C1_SCL:    0x%08x\n", readl(0x4A003804));
-		printf("CTRL_CORE_PAD_GPMC_A0:     0x%08x\n", readl(0x4A003440));
-		printf("CTRL_CORE_PAD_GPMC_A1:     0x%08x\n", readl(0x4A003444));
-		printf("CTRL_CORE_PAD_VIN2A_D4:    0x%08x\n", readl(0x4A003578));
-		printf("CTRL_CORE_PAD_VIN2A_D5:    0x%08x\n", readl(0x4A00357C));
-		//printf("CM_L4PER_GPIO2_CLKCTRL:    0x%08x\n", readl(0x4A009760));
-		//printf("CM_L4PER_GPIO3_CLKCTRL:    0x%08x\n", readl(0x4A009768));
-		//printf("CM_L4PER_GPIO4_CLKCTRL:    0x%08x\n", readl(0x4A009770));
-		//printf("CM_L4PER_GPIO5_CLKCTRL:    0x%08x\n", readl(0x4A009778));
-		//printf("CM_L4PER_GPIO6_CLKCTRL:    0x%08x\n", readl(0x4A009780));
-		printf("CM_L4PER_GPIO7_CLKCTRL:    0x%08x\n", readl(0x4A009810));
-		printf("CM_L4PER_I2C1_CLKCTRL:     0x%08x\n", readl(0x4A0097A0));
-		//printf("CM_L4PER_I2C2_CLKCTRL:     0x%08x\n", readl(0x4A0097A8));
-		//printf("CM_L4PER_I2C3_CLKCTRL:     0x%08x\n", readl(0x4A0097B0));
-		printf("CM_L4PER_I2C4_CLKCTRL:     0x%08x\n", readl(0x4A0097B8));
-		printf("CM_L4PER_L4_PER1_CLKCTRL   0x%08x\n", readl(0x4A0097C0));
-		printf("PM_L4PER_I2C1_WKDEP        0x%08x\n", readl(0x4AE074A0));
-		printf("RM_L4PER_I2C1_CONTEXT      0x%08x\n", readl(0x4AE074A4));
-		//printf("PM_L4PER_I2C2_WKDEP        0x%08x\n", readl(0x4AE074A8));
-		//printf("RM_L4PER_I2C2_CONTEXT      0x%08x\n", readl(0x4AE074AC));
-		//printf("PM_L4PER_I2C3_WKDEP        0x%08x\n", readl(0x4AE074B0));
-		//printf("RM_L4PER_I2C3_CONTEXT      0x%08x\n", readl(0x4AE074B4));
-		printf("PM_L4PER_I2C4_WKDEP        0x%08x\n", readl(0x4AE074B8));
-		printf("RM_L4PER_I2C4_CONTEXT      0x%08x\n", readl(0x4AE074BC));
-
-		//printf("CTRL_CORE_DMA_SYSTEM_DREQ_122_123      0x%08x\n", readl(0x4A002C6C));
-		//printf("CTRL_CORE_DMA_SYSTEM_DREQ_124_125      0x%08x\n", readl(0x4A002C70));
-		//printf("CTRL_CORE_MPU_IRQ_62_63    0x%08x\n", readl(0x4A002AB8));
 
 		for ( addr = CAPE_EEPROM_ADDR0; addr <= CAPE_EEPROM_ADDR3; addr++ ) {
 			printf("BeagleBone: cape eeprom: i2c_probe: 0x%x\n", addr);
@@ -1008,15 +976,6 @@ int spl_start_uboot(void)
 			} else {
 				pr_err("Found device at address 0x%x\n", addr);
 			}
-
-	//		printf("BeagleBone: cape eeprom: i2c_probe: 0x%x\n", addr));
-	//		rc = i2c_get_chip_for_busnum(CAPE_EEPROM_BUS_NUM, addr, 1, &dev);
-	//		if (rc) {
-	//			printf("failed to get device for EEPROM at address 0x%x\n",
-	//			       addr);
-	//			goto out;
-	//		}
-	//		out:
 		}
 	}
 
@@ -1239,7 +1198,7 @@ int board_fit_config_name_match(const char *name)
 	} else if (board_is_am572x_evm()) {
 		if (board_is_am572x_evm_reva3()) {
 			if (!strcmp(name, "am57xx-evm-reva3"))
-			 return 0;
+				return 0;
 		} else if (!strcmp(name, "am57xx-beagle-x15")) {
 			return 0;
 		}
@@ -1248,8 +1207,6 @@ int board_fit_config_name_match(const char *name)
 	} else if (board_is_am574x_idk() && !strcmp(name, "am574x-idk")) {
 		return 0;
 	} else if (board_is_am571x_idk() && !strcmp(name, "am571x-idk")) {
-		return 0;
-	} else if (board_is_bbai() && !strcmp(name, "am5729-beagleboneai")) {
 		return 0;
 	}
 
