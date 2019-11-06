@@ -98,12 +98,6 @@ static const struct dmm_lisa_map_regs beagle_x15_lisa_regs = {
 	.is_ma_present  = 0x1
 };
 
-static const struct dmm_lisa_map_regs bbai_lisa_regs = {
-	///FIXME: Document, where this magic number come from?
-	.dmm_lisa_map_3 = 0x80640100,
-	.is_ma_present  = 0x1
-};
-
 static const struct dmm_lisa_map_regs am571x_idk_lisa_regs = {
 	.dmm_lisa_map_3 = 0x80640100,
 	.is_ma_present  = 0x1
