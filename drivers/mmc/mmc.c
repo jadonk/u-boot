@@ -415,6 +415,60 @@ static int mmc_read_blocks(struct mmc *mmc, void *dst, lbaint_t start,
 	return blkcnt;
 }
 
+int mmc_read(struct mmc *mmc, u64 src, uchar *dst, int size)
+{
+	char *buffer;
+	int i;
+	int blklen = mmc->read_bl_len;
+	int startblock = lldiv(src, mmc->read_bl_len);
+	int endblock = lldiv(src + size - 1, mmc->read_bl_len);
+	int err = 0;
+
+	/* Make a buffer big enough to hold all the blocks we might read */
+	buffer = malloc(blklen);
+
+	if (!buffer) {
+		printf("Could not allocate buffer for MMC read!\n");
+		return -1;
+	}
+
+	/* We always do full block reads from the card */
+	err = mmc_set_blocklen(mmc, mmc->read_bl_len);
+
+	if (err)
+		goto free_buffer;
+
+	for (i = startblock; i <= endblock; i++) {
+		int segment_size;
+		int offset;
+
+		err = mmc_read_blocks(mmc, buffer, i, 1);
+
+		if (err != 1)
+			goto free_buffer;
+
+		/*
+		 * The first block may not be aligned, so we
+		 * copy from the desired point in the block
+		 */
+		offset = (src & (blklen - 1));
+		segment_size = blklen - offset;
+		if (segment_size < size)
+			segment_size = size;
+
+		memcpy(dst, buffer + offset, size);
+
+		dst += segment_size;
+		src += segment_size;
+		size -= segment_size;
+	}
+
+free_buffer:
+	free(buffer);
+
+	return err;
+}
+
 #if CONFIG_IS_ENABLED(BLK)
 ulong mmc_bread(struct udevice *dev, lbaint_t start, lbaint_t blkcnt, void *dst)
 #else

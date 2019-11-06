@@ -12,6 +12,7 @@
 #include <palmas.h>
 #include <sata.h>
 #include <usb.h>
+#include <errno.h>
 #include <asm/omap_common.h>
 #include <asm/omap_sec_common.h>
 #include <asm/emif.h>
@@ -36,6 +37,10 @@
 #include "../common/board_detect.h"
 #include "mux_data.h"
 
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+static int board_bootmode_has_emmc(void);
+#endif
+
 #define board_is_x15()		board_ti_is("BBRDX15_")
 #define board_is_x15_revb1()	(board_ti_is("BBRDX15_") && \
 				 !strncmp("B.10", board_ti_get_rev(), 3))
@@ -48,7 +53,7 @@
 #define board_is_am574x_idk()	board_ti_is("AM574IDK")
 #define board_is_am572x_idk()	board_ti_is("AM572IDK")
 #define board_is_am571x_idk()	board_ti_is("AM571IDK")
-#define board_is_bbai()		board_ti_is("BBBBAI__") //no EEPROM...
+#define board_is_bbai()	        board_ti_is("BBONE-AI")
 
 #ifdef CONFIG_DRIVER_TI_CPSW
 #include <cpsw.h>
@@ -107,6 +112,11 @@ static const struct dmm_lisa_map_regs am571x_idk_lisa_regs = {
 static const struct dmm_lisa_map_regs am574x_idk_lisa_regs = {
 	.dmm_lisa_map_2 = 0xc0600200,
 	.dmm_lisa_map_3 = 0x80600100,
+	.is_ma_present  = 0x1
+};
+
+static const struct dmm_lisa_map_regs bbai_lisa_regs = {
+	.dmm_lisa_map_3 = 0x80640100,
 	.is_ma_present  = 0x1
 };
 
@@ -521,11 +531,14 @@ void do_board_detect(void)
 				  CONFIG_EEPROM_CHIP_ADDRESS);
 	if (rc)	{
 		printf("ti_i2c_eeprom_init failed %d\n", rc);
-		ti_i2c_eeprom_am_set("BBBBAI__", "A");
-	};
 
-	puts("in do_board_detect\n");
-	printf("do_board_detect\n");
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+	rc = board_bootmode_has_emmc();
+	if (!rc)
+		rc = ti_emmc_boardid_get();
+	if (rc)
+		printf("ti_emmc_boardid_get failed %d\n", rc);
+#endif
 }
 
 #else	/* CONFIG_SPL_BUILD */
@@ -541,6 +554,14 @@ void do_board_detect(void)
 	if (rc)
 		printf("ti_i2c_eeprom_init failed %d\n", rc);
 
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+	rc = board_bootmode_has_emmc();
+	if (!rc)
+		rc = ti_emmc_boardid_get();
+	if (rc)
+		printf("ti_emmc_boardid_get failed %d\n", rc);
+#endif
+
 	if (board_is_x15())
 		bname = "BeagleBoard X15";
 	else if (board_is_bbai())
@@ -553,6 +574,8 @@ void do_board_detect(void)
 		bname = "AM572x IDK";
 	else if (board_is_am571x_idk())
 		bname = "AM571x IDK";
+	else if (board_is_bbai())
+		bname = "BeagleBone AI";
 
 	if (bname)
 		snprintf(sysinfo.board_string, SYSINFO_BOARD_NAME_MAX_LEN,
@@ -589,6 +612,8 @@ static void setup_board_eeprom_env(void)
 		name = "am572x_idk";
 	} else if (board_is_am571x_idk()) {
 		name = "am571x_idk";
+	} else if (board_is_bbai()) {
+		name = "am5729_beagleboneai";
 	} else {
 		printf("Unidentified board claims %s in eeprom header\n",
 		       board_ti_get_name());
@@ -747,60 +772,6 @@ int board_late_init(void)
 	am57x_idk_lcd_detect();
 
 	if (board_is_bbai()) {
-		///FIXME, too late!! But useful for testing function...
-		printf("CTRL_CORE_PAD_I2C1_SDA:    0x%08x\n", readl(0x4A003800));
-		printf("CTRL_CORE_PAD_I2C1_SCL:    0x%08x\n", readl(0x4A003804));
-		printf("CTRL_CORE_PAD_GPMC_A0:     0x%08x\n", readl(0x4A003440));
-		printf("CTRL_CORE_PAD_GPMC_A1:     0x%08x\n", readl(0x4A003444));
-		printf("CTRL_CORE_PAD_VIN2A_D4:    0x%08x\n", readl(0x4A003578));
-		printf("CTRL_CORE_PAD_VIN2A_D5:    0x%08x\n", readl(0x4A00357C));
-		//printf("CM_L4PER_GPIO2_CLKCTRL:    0x%08x\n", readl(0x4A009760));
-		//printf("CM_L4PER_GPIO3_CLKCTRL:    0x%08x\n", readl(0x4A009768));
-		//printf("CM_L4PER_GPIO4_CLKCTRL:    0x%08x\n", readl(0x4A009770));
-		//printf("CM_L4PER_GPIO5_CLKCTRL:    0x%08x\n", readl(0x4A009778));
-		//printf("CM_L4PER_GPIO6_CLKCTRL:    0x%08x\n", readl(0x4A009780));
-		printf("CM_L4PER_GPIO7_CLKCTRL:    0x%08x\n", readl(0x4A009810));
-
-		printf("CM_L4PER_I2C1_CLKCTRL:     0x%08x\n", readl(0x4A0097A0));
-		//printf("CM_L4PER_I2C2_CLKCTRL:     0x%08x\n", readl(0x4A0097A8));
-		//printf("CM_L4PER_I2C3_CLKCTRL:     0x%08x\n", readl(0x4A0097B0));
-		printf("CM_L4PER_I2C4_CLKCTRL:     0x%08x\n", readl(0x4A0097B8));
-		printf("CM_L4PER_L4_PER1_CLKCTRL   0x%08x\n", readl(0x4A0097C0));
-		printf("PM_L4PER_I2C1_WKDEP        0x%08x\n", readl(0x4AE074A0));
-		printf("RM_L4PER_I2C1_CONTEXT      0x%08x\n", readl(0x4AE074A4));
-		//printf("PM_L4PER_I2C2_WKDEP        0x%08x\n", readl(0x4AE074A8));
-		//printf("RM_L4PER_I2C2_CONTEXT      0x%08x\n", readl(0x4AE074AC));
-		//printf("PM_L4PER_I2C3_WKDEP        0x%08x\n", readl(0x4AE074B0));
-		//printf("RM_L4PER_I2C3_CONTEXT      0x%08x\n", readl(0x4AE074B4));
-		printf("PM_L4PER_I2C4_WKDEP        0x%08x\n", readl(0x4AE074B8));
-		printf("RM_L4PER_I2C4_CONTEXT      0x%08x\n", readl(0x4AE074BC));
-
-		//printf("CTRL_CORE_DMA_SYSTEM_DREQ_122_123      0x%08x\n", readl(0x4A002C6C));
-		//printf("CTRL_CORE_DMA_SYSTEM_DREQ_124_125      0x%08x\n", readl(0x4A002C70));
-		//printf("CTRL_CORE_MPU_IRQ_62_63    0x%08x\n", readl(0x4A002AB8));
-
-		unsigned char addr;
-		struct udevice *dev;
-		int rc;
-
-		for ( addr = CAPE_EEPROM_ADDR0; addr <= CAPE_EEPROM_ADDR3; addr++ ) {
-			printf("BeagleBone: cape eeprom: i2c_probe: 0x%x\n", addr);
-
-			rc = i2c_get_chip_for_busnum(0, addr, 1, &dev);
-			if (rc) {
-				pr_err("Checking (ret 1 bus works) I2C1 bus. ret %d\n", rc);
-			} else {
-				pr_err("Found device at address 0x%x\n", addr);
-			}
-			rc = i2c_get_chip_for_busnum(3, addr, 1, &dev);
-			if (rc) {
-				pr_err("Checking (ret 1 bus works) I2C4 bus. ret %d\n", rc);
-			} else {
-				pr_err("Found device at address 0x%x\n", addr);
-			}
-
-	//		out:
-		}
 		env_set("console", "ttyS0,115200n8");
 	} else {
 		env_set("console", "ttyO2,115200n8");
@@ -823,6 +794,15 @@ void set_muxconf_regs(void)
 {
 	do_set_mux32((*ctrl)->control_padconf_core_base,
 		     early_padconf, ARRAY_SIZE(early_padconf));
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+	int rc;
+
+	rc = board_bootmode_has_emmc();
+	if(!rc)
+		do_set_mux32((*ctrl)->control_padconf_core_base,
+		             emmc_padconf, ARRAY_SIZE(emmc_padconf));
+#endif
 }
 
 #ifdef CONFIG_IODELAY_RECALIBRATION
@@ -849,10 +829,8 @@ void recalibrate_iodelay(void)
 		iod = iodelay_cfg_array_am571x_idk;
 		iod_sz = ARRAY_SIZE(iodelay_cfg_array_am571x_idk);
 	} else if (board_is_bbai()) {
-		/* Common for X15/GPEVM */
 		pconf = core_padconf_array_essential_bbai;
 		pconf_sz = ARRAY_SIZE(core_padconf_array_essential_bbai);
-		/* Since full production should switch to SR2.0  */
 		iod = iodelay_cfg_array_bbai;
 		iod_sz = ARRAY_SIZE(iodelay_cfg_array_bbai);
 	} else {
@@ -1277,6 +1255,8 @@ int board_fit_config_name_match(const char *name)
 		return 0;
 	} else if (board_is_am571x_idk() && !strcmp(name, "am571x-idk")) {
 		return 0;
+	} else if (board_is_bbai() && !strcmp(name, "am5729-beagleboneai")) {
+		return 0;
 	}
 
 	return -1;
@@ -1305,4 +1285,18 @@ void board_tee_image_process(ulong tee_image, size_t tee_size)
 }
 
 U_BOOT_FIT_LOADABLE_HANDLER(IH_TYPE_TEE, board_tee_image_process);
+#endif
+
+#ifdef CONFIG_SUPPORT_EMMC_BOOT
+static int board_bootmode_has_emmc(void)
+{
+	volatile uint32_t * CTRL_CORE_BOOTSTRAP = (uint32_t *) 0x4A0026C4;
+
+	/* Test CTRL_CORE_BOOTSTRAP register to determine if the boot
+           mode is the same as BeagleBone AI: MODE=2 (USB/SD/eMMC) */
+	if ((*CTRL_CORE_BOOTSTRAP & 0x1F) != 2)
+		return -EIO;
+
+	return 0;
+}
 #endif

@@ -8,12 +8,11 @@
  */
 
 #include <common.h>
-#include <asm/arch/hardware.h>
 #include <asm/omap_common.h>
 #include <dm/uclass.h>
-#include <env.h>
 #include <i2c.h>
-
+#include <mmc.h>
+#include <errno.h>
 #include "board_detect.h"
 
 #if !defined(CONFIG_DM_I2C)
@@ -236,6 +235,88 @@ int __maybe_unused ti_i2c_eeprom_am_get(int bus_addr, int dev_addr)
 
 	memcpy(ep->mac_addr, am_ep.mac_addr,
 	       TI_EEPROM_HDR_NO_OF_MAC_ADDR * TI_EEPROM_HDR_ETH_ALEN);
+
+	return 0;
+}
+
+int __maybe_unused ti_emmc_boardid_get(void)
+{
+	int rc;
+	struct udevice *dev;
+	struct mmc *mmc;
+	struct ti_common_eeprom *ep;
+	struct ti_emmc_boardid brdid;
+
+	ep = TI_EEPROM_DATA;
+	if (ep->header == TI_EEPROM_HEADER_MAGIC)
+		return 0; /* EEPROM has already been read */
+
+	/* Initialize with a known bad marker for emmc fails.. */
+	ep->header = TI_DEAD_EEPROM_MAGIC;
+	ep->name[0] = 0x0;
+	ep->version[0] = 0x0;
+	ep->serial[0] = 0x0;
+	ep->config[0] = 0x0;
+
+	rc = mmc_initialize(NULL);
+	if (rc)
+		return rc;
+
+	/* Set device to /dev/mmcblk1 */
+	rc = uclass_get_device(UCLASS_MMC, 1, &dev);
+	if (rc)
+		return rc;
+
+	mmc = mmc_get_mmc_dev(dev);
+	if (!mmc)
+		return -ENODEV;
+
+	mmc_init(mmc);
+
+#if CONFIG_IS_ENABLED(MMC_VERBOSE)
+        printf("Manufacturer ID: %x\n", mmc->cid[0] >> 24);
+        printf("OEM: %x\n", (mmc->cid[0] >> 8) & 0xffff);
+        printf("Name: %c%c%c%c%c \n", mmc->cid[0] & 0xff,
+	       (mmc->cid[1] >> 24), (mmc->cid[1] >> 16) & 0xff,
+	       (mmc->cid[1] >> 8) & 0xff, mmc->cid[1] & 0xff);
+
+        printf("Bus Speed: %d\n", mmc->clock);
+        printf("Mode: %s\n", mmc_mode_name(mmc->selected_mode));
+        mmc_dump_capabilities("card capabilities", mmc->card_caps);
+        mmc_dump_capabilities("host capabilities", mmc->host_caps);
+        printf("Rd Block Len: %d\n", mmc->read_bl_len);
+
+        printf("%s version %d.%d", IS_SD(mmc) ? "SD" : "MMC",
+	       EXTRACT_SDMMC_MAJOR_VERSION(mmc->version),
+	       EXTRACT_SDMMC_MINOR_VERSION(mmc->version));
+        if (EXTRACT_SDMMC_CHANGE_VERSION(mmc->version) != 0)
+		printf(".%d", EXTRACT_SDMMC_CHANGE_VERSION(mmc->version));
+        printf("\n");
+
+        printf("High Capacity: %s\n", mmc->high_capacity ? "Yes" : "No");
+        puts("Capacity: ");
+        print_size(mmc->capacity, "\n");
+
+        printf("Bus Width: %d-bit%s\n", mmc->bus_width,
+	       mmc->ddr_mode ? " DDR" : "");
+#endif
+
+	/* Set partition to /dev/mmcblk1boot1 */
+	rc = mmc_switch_part(mmc, 2);
+	if (rc)
+		return rc;
+
+	rc = mmc_read(mmc, 0L, (uchar *) &brdid, sizeof(brdid));
+	if (rc != 1)
+		return rc;
+
+	ep->header = brdid.header;
+	strlcpy(ep->name, brdid.name, TI_EMMC_HDR_NAME_LEN + 1);
+	ti_eeprom_string_cleanup(ep->name);
+	strlcpy(ep->version, brdid.version, TI_EMMC_HDR_REV_LEN + 1);
+	ti_eeprom_string_cleanup(ep->version);
+	strlcpy(ep->serial, brdid.serial, TI_EMMC_HDR_SERIAL_LEN + 1);
+	ti_eeprom_string_cleanup(ep->serial);
 
 	return 0;
 }

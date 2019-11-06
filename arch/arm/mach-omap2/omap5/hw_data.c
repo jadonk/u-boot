@@ -497,7 +497,6 @@ void enable_basic_uboot_clocks(void)
 		(*prcm)->cm_l4per_mcspi1_clkctrl,
 		(*prcm)->cm_l4per_i2c2_clkctrl,
 		(*prcm)->cm_l4per_i2c3_clkctrl,
-		(*prcm)->cm_l4per_i2c4_clkctrl,
 #if defined(CONFIG_DRA7XX)
 		(*prcm)->cm_ipu_i2c5_clkctrl,
 #else
